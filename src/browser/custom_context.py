@@ -20,8 +20,19 @@ logger = logging.getLogger(__name__)
 
 class CustomBrowserContext(BrowserContext):
 
+    def __init__(
+            self,
+            browser: 'Browser',
+            config: BrowserContextConfig = BrowserContextConfig(),
+            context: BrowserContext = None
+    ):
+        super(CustomBrowserContext, self).__init__(browser, config)
+        self.context = context
+
     async def _create_context(self, browser: PlaywrightBrowser):
         """Creates a new browser context with anti-detection measures and loads cookies if available."""
+        if self.context:
+            return self.context
         if self.browser.config.chrome_instance_path and len(browser.contexts) > 0:
             # Connect to existing Chrome instance instead of creating new one
             context = browser.contexts[0]
