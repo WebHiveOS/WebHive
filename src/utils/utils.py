@@ -18,7 +18,7 @@ def get_llm_model(provider: str, **kwargs):
     :param kwargs:
     :return:
     """
-    if provider == 'claude':
+    if provider == 'anthropic':
         return ChatAnthropic(
             model_name=kwargs.get("model_name", 'claude-3-5-sonnet-20240620'),
             temperature=kwargs.get("temperature", 0.0),
