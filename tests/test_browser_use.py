@@ -106,7 +106,7 @@ async def test_browser_use_custom():
     )
 
     controller = CustomController()
-    use_own_browser = True
+    use_own_browser = False
     disable_security = True
     playwright = None
     browser_context_ = None

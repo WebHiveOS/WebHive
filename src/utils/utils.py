@@ -6,6 +6,8 @@
 # @FileName: utils.py
 
 import base64
+import os
+
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -19,32 +21,64 @@ def get_llm_model(provider: str, **kwargs):
     :return:
     """
     if provider == 'anthropic':
+        if not kwargs.get("base_url", ""):
+            base_url = "https://api.anthropic.com"
+        else:
+            base_url = kwargs.get("base_url")
+
+        if not kwargs.get("api_key", ""):
+            api_key = os.getenv("ANTHROPIC_API_KEY", "")
+        else:
+            api_key = kwargs.get("api_key")
+
         return ChatAnthropic(
             model_name=kwargs.get("model_name", 'claude-3-5-sonnet-20240620'),
             temperature=kwargs.get("temperature", 0.0),
-            base_url=kwargs.get("base_url", "https://api.anthropic.com"),
-            api_key=kwargs.get("api_key", None)
+            base_url=base_url,
+            api_key=api_key
         )
     elif provider == 'openai':
+        if not kwargs.get("base_url", ""):
+            base_url = "https://api.openai.com/v1"
+        else:
+            base_url = kwargs.get("base_url")
+
+        if not kwargs.get("api_key", ""):
+            api_key = os.getenv("OPENAI_API_KEY", "")
+        else:
+            api_key = kwargs.get("api_key")
+
         return ChatOpenAI(
             model=kwargs.get("model_name", 'gpt-4o'),
             temperature=kwargs.get("temperature", 0.0),
-            base_url=kwargs.get("base_url", "https://api.openai.com/v1/"),
-            api_key=kwargs.get("api_key", None)
+            base_url=base_url,
+            api_key=api_key
         )
     elif provider == 'gemini':
+        if not kwargs.get("api_key", ""):
+            api_key = os.getenv("GOOGLE_API_KEY", "")
+        else:
+            api_key = kwargs.get("api_key")
         return ChatGoogleGenerativeAI(
             model=kwargs.get("model_name", 'gemini-2.0-flash-exp'),
             temperature=kwargs.get("temperature", 0.0),
-            google_api_key=kwargs.get("api_key", None),
+            google_api_key=api_key,
         )
     elif provider == "azure_openai":
+        if not kwargs.get("base_url", ""):
+            base_url = os.getenv("AZURE_OPENAI_ENDPOINT", "")
+        else:
+            base_url = kwargs.get("base_url")
+        if not kwargs.get("api_key", ""):
+            api_key = os.getenv("AZURE_OPENAI_API_KEY", "")
+        else:
+            api_key = kwargs.get("api_key")
         return AzureChatOpenAI(
             model=kwargs.get("model_name", 'gpt-4o'),
             temperature=kwargs.get("temperature", 0.0),
             api_version="2024-05-01-preview",
-            azure_endpoint=kwargs.get("base_url", ""),
-            api_key=kwargs.get("api_key", None)
+            azure_endpoint=base_url,
+            api_key=api_key
         )
     else:
         raise ValueError(f'Unsupported provider: {provider}')
