@@ -8,28 +8,30 @@ from dataclasses import dataclass
 from typing import Type
 from pydantic import BaseModel, ConfigDict, Field, ValidationError, create_model
 from browser_use.controller.registry.views import ActionModel
+from browser_use.agent.views import AgentOutput
 
 
 @dataclass
 class CustomAgentStepInfo:
     step_number: int
     max_steps: int
+    task: str
+    add_infos: str
     memory: str
-
+    task_progress: str
 
 
 class CustomAgentBrain(BaseModel):
     """Current state of the agent"""
 
     prev_action_evaluation: str
-    memory: str
-    progress: str
+    import_contents: str
+    completed_contents: str
     thought: str
     summary: str
-    action: str
 
 
-class CustomAgentOutput(BaseModel):
+class CustomAgentOutput(AgentOutput):
     """Output model for agent
 
     @dev note: this model is extended with custom actions in AgentService. You can also use some fields that are not in this model as provided by the linter, as long as they are registered in the DynamicActions model.

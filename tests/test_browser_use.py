@@ -74,11 +74,13 @@ async def test_browser_use_org():
 
 
 async def test_browser_use_custom():
+    from browser_use.browser.context import BrowserContextWindowSize
+
     from src.browser.custom_browser import CustomBrowser, BrowserConfig
     from src.browser.custom_context import BrowserContext, BrowserContextConfig
     from src.controller.custom_controller import CustomController
-
-    from browser_use.browser.context import BrowserContextWindowSize
+    from src.agent.custom_agent import CustomAgent
+    from src.agent.custom_prompts import CustomSystemPrompt
 
     window_w, window_h = 1920, 1080
 
@@ -105,7 +107,6 @@ async def test_browser_use_custom():
         )
     )
     controller = CustomController()
-
     async with await browser.new_context(
             config=BrowserContextConfig(
                 trace_path='./tmp/traces',
@@ -119,6 +120,7 @@ async def test_browser_use_custom():
             llm=llm,
             browser_context=browser_context,
             controller=controller,
+            system_prompt_class=CustomSystemPrompt
         )
         history: AgentHistoryList = await agent.run(max_steps=10)
 
