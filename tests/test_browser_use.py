@@ -98,16 +98,23 @@ async def test_browser_use_custom():
     #     api_key=os.getenv("AZURE_OPENAI_API_KEY", "")
     # )
 
+    # llm = utils.get_llm_model(
+    #     provider="gemini",
+    #     model_name="gemini-2.0-flash-exp",
+    #     temperature=1.0,
+    #     api_key=os.getenv("GOOGLE_API_KEY", "")
+    # )
+
     llm = utils.get_llm_model(
-        provider="gemini",
-        model_name="gemini-2.0-flash-exp",
-        temperature=1.0,
-        api_key=os.getenv("GOOGLE_API_KEY", "")
+        provider="deepseek",
+        model_name="deepseek-chat",
+        temperature=0.8
     )
 
     controller = CustomController()
     use_own_browser = False
     disable_security = True
+    use_vision = False
     playwright = None
     browser_context_ = None
     try:
@@ -156,7 +163,8 @@ async def test_browser_use_custom():
                 llm=llm,
                 browser_context=browser_context,
                 controller=controller,
-                system_prompt_class=CustomSystemPrompt
+                system_prompt_class=CustomSystemPrompt,
+                use_vision=use_vision
             )
             history: AgentHistoryList = await agent.run(max_steps=10)
 

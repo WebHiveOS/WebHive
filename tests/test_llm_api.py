@@ -95,7 +95,29 @@ def test_azure_openai_model():
     print(ai_msg.content)
 
 
+def test_deepseek_model():
+    from langchain_core.messages import HumanMessage
+    from src.utils import utils
+
+    llm = utils.get_llm_model(
+        provider="deepseek",
+        model_name="deepseek-chat",
+        temperature=0.8,
+        base_url=os.getenv("DEEPSEEK_ENDPOINT", ""),
+        api_key=os.getenv("DEEPSEEK_API_KEY", "")
+    )
+    pdb.set_trace()
+    message = HumanMessage(
+        content=[
+            {"type": "text", "text": "who are you?"}
+        ]
+    )
+    ai_msg = llm.invoke([message])
+    print(ai_msg.content)
+
+
 if __name__ == '__main__':
     # test_openai_model()
-    test_gemini_model()
+    # test_gemini_model()
     # test_azure_openai_model()
+    test_deepseek_model()
