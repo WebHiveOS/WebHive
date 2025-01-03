@@ -25,7 +25,7 @@ class CustomAgentBrain(BaseModel):
     """Current state of the agent"""
 
     prev_action_evaluation: str
-    import_contents: str
+    important_contents: str
     completed_contents: str
     thought: str
     summary: str

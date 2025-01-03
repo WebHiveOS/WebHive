@@ -52,7 +52,7 @@ async def run_browser_agent(
         save_recording_path,
         task,
         add_infos,
-        progress=gr.Progress()
+        max_steps
 ):
     """
     Runs the browser agent based on user configurations.
@@ -74,7 +74,7 @@ async def run_browser_agent(
             window_h=window_h,
             save_recording_path=save_recording_path,
             task=task,
-            progress=progress,
+            max_steps=max_steps,
         )
     elif agent_type == "custom":
         return await run_custom_agent(
@@ -87,7 +87,7 @@ async def run_browser_agent(
             save_recording_path=save_recording_path,
             task=task,
             add_infos=add_infos,
-            progress=progress,
+            max_steps=max_steps,
         )
     else:
         raise ValueError(f"Invalid agent type: {agent_type}")
@@ -101,7 +101,7 @@ async def run_org_agent(
         window_h,
         save_recording_path,
         task,
-        progress
+        max_steps
 ):
     browser = Browser(
         config=BrowserConfig(
@@ -123,7 +123,7 @@ async def run_org_agent(
             llm=llm,
             browser_context=browser_context,
         )
-        history = await agent.run(max_steps=10)
+        history = await agent.run(max_steps=max_steps)
 
         final_result = history.final_result()
         errors = history.errors()
@@ -143,7 +143,7 @@ async def run_custom_agent(
         save_recording_path,
         task,
         add_infos,
-        progress
+        max_steps
 ):
     controller = CustomController()
     playwright = None
@@ -195,7 +195,7 @@ async def run_custom_agent(
                 controller=controller,
                 system_prompt_class=CustomSystemPrompt
             )
-            history = await agent.run(max_steps=10)
+            history = await agent.run(max_steps=max_steps)
 
             final_result = history.final_result()
             errors = history.errors()
@@ -244,6 +244,7 @@ def main():
         gr.Markdown("<center><h1>Browser Use WebUI</h1></center>")
         with gr.Row():
             agent_type = gr.Radio(["org", "custom"], label="Agent Type", value="custom")
+            max_steps = gr.Number(label="max run steps", value=100)
         with gr.Row():
             llm_provider = gr.Dropdown(
                 ["anthropic", "openai", "gemini", "azure_openai"], label="LLM Provider", value="gemini"
@@ -266,7 +267,7 @@ def main():
         with gr.Accordion("Task Settings", open=True):
             task = gr.Textbox(label="Task", lines=10,
                               value="go to google.com and type 'OpenAI' click search and give me the first url")
-            add_infos = gr.Textbox(label="Additional Infos", lines=10)
+            add_infos = gr.Textbox(label="Additional Infos(Optional): Hints to help LLM complete Task", lines=5)
 
         run_button = gr.Button("Run Agent", variant="primary")
         with gr.Column():
@@ -292,6 +293,7 @@ def main():
                 save_recording_path,
                 task,
                 add_infos,
+                max_steps
             ],
             outputs=[final_result_output, errors_output, model_actions_output, model_thoughts_output],
         )

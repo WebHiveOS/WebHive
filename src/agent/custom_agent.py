@@ -126,8 +126,8 @@ class CustomAgent(Agent):
             emoji = '🤷'
 
         logger.info(f'{emoji} Eval: {response.current_state.prev_action_evaluation}')
-        logger.info(f'🧠 Memory: {response.current_state.import_contents}')
-        logger.info(f'⏳  Task Progress: {response.current_state.completed_contents}')
+        logger.info(f'🧠 New Memory: {response.current_state.important_contents}')
+        logger.info(f'⏳ Task Progress: {response.current_state.completed_contents}')
         logger.info(f'🤔 Thought: {response.current_state.thought}')
         logger.info(f'🎯 Summary: {response.current_state.summary}')
         for i, action in enumerate(response.action):
@@ -143,14 +143,13 @@ class CustomAgent(Agent):
             return
 
         step_info.step_number += 1
-        import_contents = model_output.current_state.import_contents
-        if import_contents and 'None' not in import_contents and import_contents not in step_info.memory:
-            step_info.memory += import_contents + '\n'
+        important_contents = model_output.current_state.important_contents
+        if important_contents and 'None' not in important_contents and important_contents not in step_info.memory:
+            step_info.memory += important_contents + '\n'
 
         completed_contents = model_output.current_state.completed_contents
         if completed_contents and 'None' not in completed_contents:
             step_info.task_progress = completed_contents
-
 
     @time_execution_async('--step')
     async def step(self, step_info: Optional[CustomAgentStepInfo] = None) -> None:
@@ -166,6 +165,7 @@ class CustomAgent(Agent):
             input_messages = self.message_manager.get_messages()
             model_output = await self.get_next_action(input_messages)
             self.update_step_info(model_output, step_info)
+            logger.info(f'🧠 All Memory: {step_info.memory}')
             self._save_conversation(input_messages, model_output)
             self.message_manager._remove_last_state_message()  # we dont want the whole state in the chat history
             self.message_manager.add_model_output(model_output)
@@ -197,35 +197,6 @@ class CustomAgent(Agent):
                     )
             if state:
                 self._make_history_item(model_output, state, result)
-
-    def _make_history_item(
-            self,
-            model_output: CustomAgentOutput | None,
-            state: BrowserState,
-            result: list[ActionResult],
-    ) -> None:
-        """Create and store history item"""
-        interacted_element = None
-        len_result = len(result)
-
-        if model_output:
-            interacted_elements = AgentHistory.get_interacted_element(
-                model_output, state.selector_map
-            )
-        else:
-            interacted_elements = [None]
-
-        state_history = BrowserStateHistory(
-            url=state.url,
-            title=state.title,
-            tabs=state.tabs,
-            interacted_element=interacted_elements,
-            screenshot=state.screenshot,
-        )
-
-        history_item = AgentHistory(model_output=model_output, result=result, state=state_history)
-
-        self.history.history.append(history_item)
 
     async def run(self, max_steps: int = 100) -> AgentHistoryList:
         """Execute the task with maximum number of steps"""
