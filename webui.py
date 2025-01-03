@@ -52,7 +52,8 @@ async def run_browser_agent(
         save_recording_path,
         task,
         add_infos,
-        max_steps
+        max_steps,
+        use_vision
 ):
     """
     Runs the browser agent based on user configurations.
@@ -75,6 +76,7 @@ async def run_browser_agent(
             save_recording_path=save_recording_path,
             task=task,
             max_steps=max_steps,
+            use_vision=use_vision
         )
     elif agent_type == "custom":
         return await run_custom_agent(
@@ -88,6 +90,7 @@ async def run_browser_agent(
             task=task,
             add_infos=add_infos,
             max_steps=max_steps,
+            use_vision=use_vision
         )
     else:
         raise ValueError(f"Invalid agent type: {agent_type}")
@@ -101,7 +104,8 @@ async def run_org_agent(
         window_h,
         save_recording_path,
         task,
-        max_steps
+        max_steps,
+        use_vision
 ):
     browser = Browser(
         config=BrowserConfig(
@@ -121,6 +125,7 @@ async def run_org_agent(
         agent = Agent(
             task=task,
             llm=llm,
+            use_vision=use_vision,
             browser_context=browser_context,
         )
         history = await agent.run(max_steps=max_steps)
@@ -143,7 +148,8 @@ async def run_custom_agent(
         save_recording_path,
         task,
         add_infos,
-        max_steps
+        max_steps,
+        use_vision
 ):
     controller = CustomController()
     playwright = None
@@ -190,6 +196,7 @@ async def run_custom_agent(
             agent = CustomAgent(
                 task=task,
                 add_infos=add_infos,
+                use_vision=use_vision,
                 llm=llm,
                 browser_context=browser_context,
                 controller=controller,
@@ -245,9 +252,10 @@ def main():
         with gr.Row():
             agent_type = gr.Radio(["org", "custom"], label="Agent Type", value="custom")
             max_steps = gr.Number(label="max run steps", value=100)
+            use_vision = gr.Checkbox(label="use vision", value=True)
         with gr.Row():
             llm_provider = gr.Dropdown(
-                ["anthropic", "openai", "gemini", "azure_openai"], label="LLM Provider", value="gemini"
+                ["anthropic", "openai", "gemini", "azure_openai", "deepseek"], label="LLM Provider", value="gemini"
             )
             llm_model_name = gr.Textbox(label="LLM Model Name", value="gemini-2.0-flash-exp")
             llm_temperature = gr.Number(label="LLM Temperature", value=1.0)
@@ -293,7 +301,8 @@ def main():
                 save_recording_path,
                 task,
                 add_infos,
-                max_steps
+                max_steps,
+                use_vision
             ],
             outputs=[final_result_output, errors_output, model_actions_output, model_thoughts_output],
         )

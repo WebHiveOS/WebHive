@@ -54,6 +54,23 @@ def get_llm_model(provider: str, **kwargs):
             base_url=base_url,
             api_key=api_key
         )
+    elif provider == 'deepseek':
+        if not kwargs.get("base_url", ""):
+            base_url = os.getenv("DEEPSEEK_ENDPOINT", "")
+        else:
+            base_url = kwargs.get("base_url")
+
+        if not kwargs.get("api_key", ""):
+            api_key = os.getenv("DEEPSEEK_API_KEY", "")
+        else:
+            api_key = kwargs.get("api_key")
+
+        return ChatOpenAI(
+            model=kwargs.get("model_name", 'gpt-4o'),
+            temperature=kwargs.get("temperature", 0.0),
+            base_url=base_url,
+            api_key=api_key
+        )
     elif provider == 'gemini':
         if not kwargs.get("api_key", ""):
             api_key = os.getenv("GOOGLE_API_KEY", "")

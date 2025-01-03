@@ -151,6 +151,20 @@ class CustomAgent(Agent):
         if completed_contents and 'None' not in completed_contents:
             step_info.task_progress = completed_contents
 
+    @time_execution_async('--get_next_action')
+    async def get_next_action(self, input_messages: list[BaseMessage]) -> AgentOutput:
+        """Get next action from LLM based on current state"""
+
+        ret = self.llm.invoke(input_messages)
+        parsed_json = json.loads(ret.content.replace('```json', '').replace("```", ""))
+        parsed: AgentOutput = self.AgentOutput(**parsed_json)
+        # cut the number of actions to max_actions_per_step
+        parsed.action = parsed.action[: self.max_actions_per_step]
+        self._log_response(parsed)
+        self.n_steps += 1
+
+        return parsed
+
     @time_execution_async('--step')
     async def step(self, step_info: Optional[CustomAgentStepInfo] = None) -> None:
         """Execute one step of the task"""
