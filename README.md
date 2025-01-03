@@ -12,7 +12,7 @@ This project builds upon the foundation of the [browser-use](https://github.com/
 
 4.  **Customized Agent:** We've implemented a custom agent that enhances `browser-use` with Optimized prompts.
 
-<video src="https://github.com/user-attachments/assets/cc4ca59f-e4a5-43d8-86db-bb0e6edbedef" controls="controls" width="500" height="300" >Your browser does not support playing this video!</video>
+<video src="https://github.com/user-attachments/assets/58c0f59e-02b4-4413-aba8-6184616bf181" controls="controls" width="500" height="300" >Your browser does not support playing this video!</video>
 
 ## Environment Installation
 
