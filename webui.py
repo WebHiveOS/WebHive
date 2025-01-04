@@ -4,37 +4,26 @@
 # @Email   : wenshaoguo1026@gmail.com
 # @Project : browser-use-webui
 # @FileName: webui.py
-import pdb
-
 from dotenv import load_dotenv
-
 load_dotenv()
 import argparse
-
-import asyncio
-
 import gradio as gr
-import asyncio
 import os
-from pprint import pprint
-from typing import List, Dict, Any
-
 from playwright.async_api import async_playwright
 from browser_use.browser.browser import Browser, BrowserConfig
 from browser_use.browser.context import (
-    BrowserContext,
     BrowserContextConfig,
     BrowserContextWindowSize,
 )
 from browser_use.agent.service import Agent
-
 from src.browser.custom_browser import CustomBrowser, BrowserConfig
-from src.browser.custom_context import BrowserContext, BrowserContextConfig
+from src.browser.custom_context import BrowserContextConfig
 from src.controller.custom_controller import CustomController
 from src.agent.custom_agent import CustomAgent
 from src.agent.custom_prompts import CustomSystemPrompt
 
 from src.utils import utils
+from src.utils.file_utils import get_latest_files
 
 
 async def run_browser_agent(
@@ -134,8 +123,12 @@ async def run_org_agent(
         errors = history.errors()
         model_actions = history.model_actions()
         model_thoughts = history.model_thoughts()
+    
+    # Get the latest recorded files after agent completion
+    recorded_files = get_latest_files(save_recording_path)
+    
     await browser.close()
-    return final_result, errors, model_actions, model_thoughts
+    return final_result, errors, model_actions, model_thoughts, recorded_files.get('.webm'), recorded_files.get('.zip')
 
 
 async def run_custom_agent(
@@ -208,6 +201,8 @@ async def run_custom_agent(
             errors = history.errors()
             model_actions = history.model_actions()
             model_thoughts = history.model_thoughts()
+            
+            recorded_files = get_latest_files(save_recording_path)
 
     except Exception as e:
         import traceback
@@ -216,6 +211,7 @@ async def run_custom_agent(
         errors = str(e) + "\n" + traceback.format_exc()
         model_actions = ""
         model_thoughts = ""
+        recorded_files = {}
     finally:
         # 显式关闭持久化上下文
         if browser_context_:
@@ -225,29 +221,12 @@ async def run_custom_agent(
         if playwright:
             await playwright.stop()
         await browser.close()
-    return final_result, errors, model_actions, model_thoughts
+    return final_result, errors, model_actions, model_thoughts, recorded_files.get('.webm'), recorded_files.get('.zip')
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Gradio UI for Browser Agent")
-    parser.add_argument("--ip", type=str, default="127.0.0.1", help="IP address to bind to")
-    parser.add_argument("--port", type=int, default=7788, help="Port to listen on")
-    args = parser.parse_args()
-
-    js_func = """
-        function refresh() {
-            const url = new URL(window.location);
-
-            if (url.searchParams.get('__theme') !== 'dark') {
-                url.searchParams.set('__theme', 'dark');
-                window.location.href = url.href;
-            }
-        }
-        """
-
     # Gradio UI setup
-    with gr.Blocks(title="Browser Use WebUI", theme=gr.themes.Soft(font=[gr.themes.GoogleFont("Plus Jakarta Sans")]),
-                   js=js_func) as demo:
+    with gr.Blocks(title="Browser Use WebUI", theme=gr.themes.Soft(font=[gr.themes.GoogleFont("Plus Jakarta Sans")])) as demo:
         gr.Markdown("<center><h1>Browser Use WebUI</h1></center>")
         with gr.Row():
             agent_type = gr.Radio(["org", "custom"], label="Agent Type", value="custom")
@@ -280,9 +259,28 @@ def main():
         run_button = gr.Button("Run Agent", variant="primary")
         with gr.Column():
             final_result_output = gr.Textbox(label="Final Result", lines=5)
-            errors_output = gr.Textbox(label="Errors", lines=5, )
+            errors_output = gr.Textbox(label="Errors", lines=5)
             model_actions_output = gr.Textbox(label="Model Actions", lines=5)
             model_thoughts_output = gr.Textbox(label="Model Thoughts", lines=5)
+            with gr.Row():
+                recording_file = gr.Video(label="Recording File")  # Changed from gr.File to gr.Video
+                trace_file = gr.File(label="Trace File (ZIP)")
+        
+        # Add a refresh button
+        refresh_button = gr.Button("Refresh Files")
+        
+        def refresh_files():
+            recorded_files = get_latest_files("./tmp/record_videos")
+            return (
+                recorded_files.get('.webm') if recorded_files.get('.webm') else None,
+                recorded_files.get('.zip') if recorded_files.get('.zip') else None
+            )
+        
+        refresh_button.click(
+            fn=refresh_files,
+            inputs=[],
+            outputs=[recording_file, trace_file]
+        )
 
         run_button.click(
             fn=run_browser_agent,
@@ -304,11 +302,19 @@ def main():
                 max_steps,
                 use_vision
             ],
-            outputs=[final_result_output, errors_output, model_actions_output, model_thoughts_output],
+            outputs=[final_result_output, errors_output, model_actions_output, model_thoughts_output, recording_file, trace_file],
         )
 
     demo.launch(server_name=args.ip, server_port=args.port)
 
-
-if __name__ == '__main__':
+if __name__ == "__main__":
+    # For local development
+    import argparse
+    parser = argparse.ArgumentParser(description="Gradio UI for Browser Agent")
+    parser.add_argument("--ip", type=str, default="127.0.0.1", help="IP address to bind to")
+    parser.add_argument("--port", type=int, default=7788, help="Port to listen on")
+    args = parser.parse_args()
+    main()
+else:
+    # For Vercel deployment
     main()

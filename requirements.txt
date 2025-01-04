@@ -2,3 +2,7 @@ browser-use
 langchain-google-genai
 pyperclip
 gradio
+python-dotenv
+playwright
+aiohttp
+argparse
