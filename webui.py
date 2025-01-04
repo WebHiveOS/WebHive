@@ -255,7 +255,8 @@ def main():
             use_vision = gr.Checkbox(label="use vision", value=True)
         with gr.Row():
             llm_provider = gr.Dropdown(
-                ["anthropic", "openai", "gemini", "azure_openai", "deepseek"], label="LLM Provider", value="gemini"
+                ["anthropic", "openai", "gemini", "azure_openai", "deepseek", "ollama"], label="LLM Provider",
+                value="gemini"
             )
             llm_model_name = gr.Textbox(label="LLM Model Name", value="gemini-2.0-flash-exp")
             llm_temperature = gr.Number(label="LLM Temperature", value=1.0)
