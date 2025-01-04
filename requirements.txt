@@ -1,8 +1,5 @@
 browser-use
-langchain-google-genai
-pyperclip
+langchain
 gradio
 python-dotenv
-playwright
-aiohttp
 argparse
