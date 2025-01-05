@@ -2,3 +2,4 @@ browser-use
 langchain-google-genai
 pyperclip
 gradio
+langchain-ollama
