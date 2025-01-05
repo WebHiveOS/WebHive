@@ -260,6 +260,7 @@ def create_ui(theme_name="Ocean"):
     
     with gr.Blocks(title="Browser Use WebUI", theme=theme_map[theme_name], css=css) as demo:
         with gr.Row():
+
             gr.Markdown(
                 """
                 # 🌐 Browser Use WebUI
@@ -303,7 +304,7 @@ def create_ui(theme_name="Ocean"):
             with gr.TabItem("🔧 LLM Configuration", id=2):
                 with gr.Group():
                     llm_provider = gr.Dropdown(
-                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek"],
+                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek", "ollama"],
                         label="LLM Provider",
                         value="gemini",
                         info="Select your preferred language model provider"
