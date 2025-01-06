@@ -320,7 +320,7 @@ def create_ui(theme_name="Ocean"):
             with gr.TabItem("🔧 LLM Configuration", id=2):
                 with gr.Group():
                     llm_provider = gr.Dropdown(
-                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek"],
+                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek", "ollama"],
                         label="LLM Provider",
                         value="gemini",
                         info="Select your preferred language model provider"
