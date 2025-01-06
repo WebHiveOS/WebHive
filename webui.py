@@ -238,7 +238,7 @@ theme_map = {
     "Ocean": Ocean()
 }
 
-def create_ui(theme_name="Ocean"):
+def create_ui(theme_name="Citrus"):
     """Create the UI with the specified theme"""
     # Enhanced styling for better visual appeal
     css = """
@@ -260,7 +260,6 @@ def create_ui(theme_name="Ocean"):
     
     with gr.Blocks(title="Browser Use WebUI", theme=theme_map[theme_name], css=css) as demo:
         with gr.Row():
-
             gr.Markdown(
                 """
                 # 🌐 Browser Use WebUI
@@ -304,7 +303,7 @@ def create_ui(theme_name="Ocean"):
             with gr.TabItem("🔧 LLM Configuration", id=2):
                 with gr.Group():
                     llm_provider = gr.Dropdown(
-                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek", "ollama"],
+                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek"],
                         label="LLM Provider",
                         value="gemini",
                         info="Select your preferred language model provider"
@@ -389,6 +388,24 @@ def create_ui(theme_name="Ocean"):
                 with gr.Row():
                     run_button = gr.Button("▶️ Run Agent", variant="primary", scale=2)
                     stop_button = gr.Button("⏹️ Stop", variant="stop", scale=1)
+
+            with gr.TabItem("🎬 Recordings", id=5):
+                def list_videos(path):
+                    if not os.path.exists(path):
+                        return ["Recording path not found"]
+                    video_files = [f for f in os.listdir(path) if f.endswith(('.mp4', '.webm'))]
+                    return [os.path.join(path, vf) for vf in video_files]
+
+                def display_videos(recording_path):
+                    return list_videos(recording_path)
+
+                recording_display = gr.Gallery(label="Recorded Videos", type="video")
+
+                demo.load(
+                    display_videos,
+                    inputs=[save_recording_path],
+                    outputs=[recording_display]
+                )
 
                 with gr.Group():
                     gr.Markdown("### Results")
