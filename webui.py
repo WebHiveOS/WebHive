@@ -54,8 +54,14 @@ async def run_browser_agent(
         max_steps,
         use_vision
 ):
+    # Ensure the recording directory exists
+    os.makedirs(save_recording_path, exist_ok=True)
 
+    # Get the list of existing videos before the agent runs
+    existing_videos = set(glob.glob(os.path.join(save_recording_path, '*.[mM][pP]4')) + 
+                          glob.glob(os.path.join(save_recording_path, '*.[wW][eE][bB][mM]')))
 
+    # Run the agent
     llm = utils.get_llm_model(
         provider=llm_provider,
         model_name=llm_model_name,
@@ -64,7 +70,7 @@ async def run_browser_agent(
         api_key=llm_api_key
     )
     if agent_type == "org":
-        return await run_org_agent(
+        final_result, errors, model_actions, model_thoughts = await run_org_agent(
             llm=llm,
             headless=headless,
             disable_security=disable_security,
@@ -76,7 +82,7 @@ async def run_browser_agent(
             use_vision=use_vision
         )
     elif agent_type == "custom":
-        return await run_custom_agent(
+        final_result, errors, model_actions, model_thoughts = await run_custom_agent(
             llm=llm,
             use_own_browser=use_own_browser,
             headless=headless,
@@ -91,6 +97,17 @@ async def run_browser_agent(
         )
     else:
         raise ValueError(f"Invalid agent type: {agent_type}")
+
+    # Get the list of videos after the agent runs
+    new_videos = set(glob.glob(os.path.join(save_recording_path, '*.[mM][pP]4')) + 
+                     glob.glob(os.path.join(save_recording_path, '*.[wW][eE][bB][mM]')))
+
+    # Find the newly created video
+    latest_video = None
+    if new_videos - existing_videos:
+        latest_video = list(new_videos - existing_videos)[0]  # Get the first new video
+
+    return final_result, errors, model_actions, model_thoughts, latest_video
 
 async def run_org_agent(
         llm,
@@ -222,6 +239,7 @@ async def run_custom_agent(
         await browser.close()
     return final_result, errors, model_actions, model_thoughts
 
+
 import argparse
 import gradio as gr
 from gradio.themes import Base, Default, Soft, Monochrome, Glass, Origin, Citrus, Ocean
@@ -239,8 +257,6 @@ theme_map = {
 }
 
 def create_ui(theme_name="Ocean"):
-    """Create the UI with the specified theme"""
-    # Enhanced styling for better visual appeal
     css = """
     .gradio-container {
         max-width: 1200px !important;
@@ -257,8 +273,18 @@ def create_ui(theme_name="Ocean"):
         border-radius: 10px;
     }
     """
+
+    js = """
+    function refresh() {
+        const url = new URL(window.location);
+        if (url.searchParams.get('__theme') !== 'dark') {
+            url.searchParams.set('__theme', 'dark');
+            window.location.href = url.href;
+        }
+    }
+    """
     
-    with gr.Blocks(title="Browser Use WebUI", theme=theme_map[theme_name], css=css) as demo:
+    with gr.Blocks(title="Browser Use WebUI", theme=theme_map[theme_name], css=css, js=js) as demo:
         with gr.Row():
             gr.Markdown(
                 """
@@ -294,7 +320,7 @@ def create_ui(theme_name="Ocean"):
             with gr.TabItem("🔧 LLM Configuration", id=2):
                 with gr.Group():
                     llm_provider = gr.Dropdown(
-                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek", "ollama"],
+                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek"],
                         label="LLM Provider",
                         value="gemini",
                         info="Select your preferred language model provider"
@@ -381,34 +407,7 @@ def create_ui(theme_name="Ocean"):
                     stop_button = gr.Button("⏹️ Stop", variant="stop", scale=1)
 
             with gr.TabItem("🎬 Recordings", id=5):
-                def list_videos(path):
-                    """Return the latest video file from the specified path."""
-                    if not os.path.exists(path):
-                        return ["Recording path not found"]
-                    
-                    # Get all video files in the directory
-                    video_files = glob.glob(os.path.join(path, '*.[mM][pP]4')) + glob.glob(os.path.join(path, '*.[wW][eE][bB][mM]'))
-                    
-                    if not video_files:
-                        return ["No recordings found"]
-                    
-                    # Sort files by modification time (latest first)
-                    video_files.sort(key=os.path.getmtime, reverse=True)
-                    
-                    # Return only the latest video
-                    return [video_files[0]]
-
-                def display_videos(recording_path):
-                    """Display the latest video in the gallery."""
-                    return list_videos(recording_path)
-
-                recording_display = gr.Gallery(label="Latest Recording", type="video")
-
-                demo.load(
-                    display_videos,
-                    inputs=[save_recording_path],
-                    outputs=[recording_display]
-                )
+                recording_display = gr.Video(label="Latest Recording")
 
                 with gr.Group():
                     gr.Markdown("### Results")
@@ -448,7 +447,7 @@ def create_ui(theme_name="Ocean"):
                 disable_security, window_w, window_h, save_recording_path,
                 task, add_infos, max_steps, use_vision
             ],
-            outputs=[final_result_output, errors_output, model_actions_output, model_thoughts_output]
+            outputs=[final_result_output, errors_output, model_actions_output, model_thoughts_output, recording_display]
         )
 
     return demo
@@ -458,9 +457,9 @@ def main():
     parser.add_argument("--ip", type=str, default="127.0.0.1", help="IP address to bind to")
     parser.add_argument("--port", type=int, default=7788, help="Port to listen on")
     parser.add_argument("--theme", type=str, default="Ocean", choices=theme_map.keys(), help="Theme to use for the UI")
+    parser.add_argument("--dark-mode", action="store_true", help="Enable dark mode")
     args = parser.parse_args()
 
-    # Create the UI with the specified theme
     demo = create_ui(theme_name=args.theme)
     demo.launch(server_name=args.ip, server_port=args.port)
 
