@@ -238,7 +238,7 @@ theme_map = {
     "Ocean": Ocean()
 }
 
-def create_ui():
+def create_ui(theme_name="Ocean"):
     """Create the UI with the specified theme"""
     # Enhanced styling for better visual appeal
     css = """
@@ -258,7 +258,7 @@ def create_ui():
     }
     """
     
-    with gr.Blocks(title="Browser Use WebUI", theme=theme_map["Ocean"], css=css) as demo:
+    with gr.Blocks(title="Browser Use WebUI", theme=theme_map[theme_name], css=css) as demo:
         with gr.Row():
             gr.Markdown(
                 """
@@ -294,7 +294,7 @@ def create_ui():
             with gr.TabItem("🔧 LLM Configuration", id=2):
                 with gr.Group():
                     llm_provider = gr.Dropdown(
-                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek", ""],
+                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek"],
                         label="LLM Provider",
                         value="gemini",
                         info="Select your preferred language model provider"
@@ -457,9 +457,11 @@ def main():
     parser = argparse.ArgumentParser(description="Gradio UI for Browser Agent")
     parser.add_argument("--ip", type=str, default="127.0.0.1", help="IP address to bind to")
     parser.add_argument("--port", type=int, default=7788, help="Port to listen on")
+    parser.add_argument("--theme", type=str, default="Citrus", choices=theme_map.keys(), help="Theme to use for the UI")
     args = parser.parse_args()
 
-    demo = create_ui()
+    # Create the UI with the specified theme
+    demo = create_ui(theme_name=args.theme)
     demo.launch(server_name=args.ip, server_port=args.port)
 
 if __name__ == '__main__':
