@@ -225,7 +225,7 @@ async def run_custom_agent(
 import argparse
 import gradio as gr
 from gradio.themes import Base, Default, Soft, Monochrome, Glass, Origin, Citrus, Ocean
-import os
+import os, glob
 
 # Define the theme map globally
 theme_map = {
@@ -238,7 +238,7 @@ theme_map = {
     "Ocean": Ocean()
 }
 
-def create_ui(theme_name="Citrus"):
+def create_ui():
     """Create the UI with the specified theme"""
     # Enhanced styling for better visual appeal
     css = """
@@ -258,7 +258,7 @@ def create_ui(theme_name="Citrus"):
     }
     """
     
-    with gr.Blocks(title="Browser Use WebUI", theme=theme_map[theme_name], css=css) as demo:
+    with gr.Blocks(title="Browser Use WebUI", theme=theme_map["Ocean"], css=css) as demo:
         with gr.Row():
             gr.Markdown(
                 """
@@ -266,15 +266,6 @@ def create_ui(theme_name="Citrus"):
                 ### Control your browser with AI assistance
                 """,
                 elem_classes=["header-text"]
-            )
-        
-        # Quick access theme switcher at the top
-        with gr.Row(elem_classes=["theme-section"]):
-            theme_dropdown = gr.Dropdown(
-                choices=list(theme_map.keys()),
-                value=theme_name,
-                label="🎨 Quick Theme Switch",
-                container=False
             )
         
         with gr.Tabs() as tabs:
@@ -303,7 +294,7 @@ def create_ui(theme_name="Citrus"):
             with gr.TabItem("🔧 LLM Configuration", id=2):
                 with gr.Group():
                     llm_provider = gr.Dropdown(
-                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek"],
+                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek", ""],
                         label="LLM Provider",
                         value="gemini",
                         info="Select your preferred language model provider"
@@ -391,15 +382,27 @@ def create_ui(theme_name="Citrus"):
 
             with gr.TabItem("🎬 Recordings", id=5):
                 def list_videos(path):
+                    """Return the latest video file from the specified path."""
                     if not os.path.exists(path):
                         return ["Recording path not found"]
-                    video_files = [f for f in os.listdir(path) if f.endswith(('.mp4', '.webm'))]
-                    return [os.path.join(path, vf) for vf in video_files]
+                    
+                    # Get all video files in the directory
+                    video_files = glob.glob(os.path.join(path, '*.[mM][pP]4')) + glob.glob(os.path.join(path, '*.[wW][eE][bB][mM]'))
+                    
+                    if not video_files:
+                        return ["No recordings found"]
+                    
+                    # Sort files by modification time (latest first)
+                    video_files.sort(key=os.path.getmtime, reverse=True)
+                    
+                    # Return only the latest video
+                    return [video_files[0]]
 
                 def display_videos(recording_path):
+                    """Display the latest video in the gallery."""
                     return list_videos(recording_path)
 
-                recording_display = gr.Gallery(label="Recorded Videos", type="video")
+                recording_display = gr.Gallery(label="Latest Recording", type="video")
 
                 demo.load(
                     display_videos,
@@ -435,17 +438,6 @@ def create_ui(theme_name="Citrus"):
                                 lines=3,
                                 show_label=True
                             )
-
-        # Handle theme changes
-        def reload_ui(new_theme):
-            """Reload the UI with the new theme"""
-            return create_ui(new_theme)
-            
-        theme_dropdown.change(
-            fn=reload_ui,
-            inputs=[theme_dropdown],
-            outputs=[demo]
-        )
 
         # Run button click handler
         run_button.click(
