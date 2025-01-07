@@ -22,7 +22,7 @@ from playwright.async_api import async_playwright
 
 from src.agent.custom_agent import CustomAgent
 from src.agent.custom_prompts import CustomSystemPrompt
-from src.browser.custom_browser import BrowserConfig, CustomBrowser
+from src.browser.custom_browser import CustomBrowser
 from src.browser.custom_context import BrowserContextConfig
 from src.controller.custom_controller import CustomController
 from src.utils import utils
