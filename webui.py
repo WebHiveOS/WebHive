@@ -239,7 +239,66 @@ async def run_custom_agent(
         await browser.close()
     return final_result, errors, model_actions, model_thoughts
 
+import os
+from langchain_openai import OpenAI
+from langchain_anthropic import Anthropic
+from langchain_google_genai import GoogleGenerativeAI
+from langchain_ollama.llms import OllamaLLM
+from langchain_openai import AzureOpenAI
 
+from openai import OpenAI, AzureOpenAI
+from google.generativeai import configure, list_models
+from langchain_anthropic import AnthropicLLM
+from langchain_ollama.llms import OllamaLLM
+
+def fetch_available_models(llm_provider, api_key=None, base_url=None):
+    try:
+        if llm_provider == "anthropic":
+            client = AnthropicLLM( api_key=api_key)
+            # Handle model fetching appropriately for Anthropic
+            return []  # Replace with actual model fetching logic
+
+        elif llm_provider == "openai" or llm_provider == "deepseek":
+            client = OpenAI(api_key=api_key, base_url=base_url)
+            models = client.models.list()
+            return [model.id for model in models.data]
+
+        elif llm_provider == "gemini":
+            configure(api_key=api_key)
+            models = list_models()
+            return [model.name for model in models]
+
+        elif llm_provider == "ollama":
+            client = OllamaLLM(model="default_model_name")  # Replace with the actual model name
+            models = client.models.list()
+            return [model.name for model in models]
+
+        elif llm_provider == "azure_openai":
+            client = AzureOpenAI(api_key=api_key, base_url=base_url)
+            models = client.models.list()
+            return [model.id for model in models.data]
+
+        else:
+            print(f"Unsupported LLM provider: {llm_provider}")
+            return []
+
+    except Exception as e:
+        print(f"Error fetching models from {llm_provider}: {e}")
+        return []
+
+def update_model_dropdown(llm_provider, api_key, base_url):
+    """
+    Callback function to update the model dropdown based on the selected LLM provider.
+    """
+    if not api_key:
+        return gr.Dropdown(choices=[], value="", interactive=False)
+
+    models = fetch_available_models(llm_provider, api_key, base_url)
+    if models:
+        return gr.Dropdown(choices=models, value=models[0], interactive=True)
+    else:
+        return gr.Dropdown(choices=[], value="", interactive=True, allow_custom_value=True)
+    
 import argparse
 import gradio as gr
 from gradio.themes import Base, Default, Soft, Monochrome, Glass, Origin, Citrus, Ocean
@@ -320,14 +379,16 @@ def create_ui(theme_name="Ocean"):
             with gr.TabItem("🔧 LLM Configuration", id=2):
                 with gr.Group():
                     llm_provider = gr.Dropdown(
-                        ["anthropic", "openai", "gemini", "azure_openai", "deepseek", "ollama"],
+                        ["anthropic", "openai", "deepseek", "gemini", "ollama", "azure_openai"],
                         label="LLM Provider",
                         value="gemini",
                         info="Select your preferred language model provider"
                     )
-                    llm_model_name = gr.Textbox(
+                    llm_model_name = gr.Dropdown(
+                        [],
                         label="Model Name",
-                        value="gemini-2.0-flash-exp",
+                        value="",
+                        interactive=False,
                         info="Specify the model to use"
                     )
                     llm_temperature = gr.Slider(
@@ -437,6 +498,13 @@ def create_ui(theme_name="Ocean"):
                                 lines=3,
                                 show_label=True
                             )
+
+        # Attach the callback to the llm_provider dropdown
+        llm_provider.change(
+            fn=update_model_dropdown,
+            inputs=[llm_provider, llm_api_key, llm_base_url],
+            outputs=llm_model_name
+        )                    
 
         # Run button click handler
         run_button.click(
