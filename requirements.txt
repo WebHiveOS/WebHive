@@ -3,4 +3,3 @@ langchain-google-genai
 pyperclip
 gradio
 langchain-ollama
-

@@ -4,14 +4,12 @@
 # @ProjectName: browser-use-webui
 # @FileName: custom_prompts.py
 
-from datetime import datetime
 from typing import List, Optional
 
-from langchain_core.messages import HumanMessage, SystemMessage
-
-from browser_use.agent.views import ActionResult, AgentStepInfo
+from browser_use.agent.prompts import SystemPrompt
+from browser_use.agent.views import ActionResult
 from browser_use.browser.views import BrowserState
-from browser_use.agent.prompts import SystemPrompt, AgentMessagePrompt
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from .custom_views import CustomAgentStepInfo
 
@@ -93,7 +91,7 @@ class CustomSystemPrompt(SystemPrompt):
        - Try to be efficient, e.g. fill forms at once, or chain actions where nothing changes on the page like saving, extracting, checkboxes...
        - only use multiple actions if it makes sense. 
     """
-        text += f'   - use maximum {self.max_actions_per_step} actions per sequence'
+        text += f"   - use maximum {self.max_actions_per_step} actions per sequence"
         return text
 
     def input_format(self) -> str:
@@ -128,7 +126,7 @@ class CustomSystemPrompt(SystemPrompt):
         Returns:
             str: Formatted system prompt
         """
-        time_str = self.current_date.strftime('%Y-%m-%d %H:%M')
+        time_str = self.current_date.strftime("%Y-%m-%d %H:%M")
 
         AGENT_PROMPT = f"""You are a precise browser automation agent that interacts with websites through structured commands. Your role is to:
     1. Analyze the provided webpage elements and structure
@@ -150,12 +148,12 @@ class CustomSystemPrompt(SystemPrompt):
 
 class CustomAgentMessagePrompt:
     def __init__(
-            self,
-            state: BrowserState,
-            result: Optional[List[ActionResult]] = None,
-            include_attributes: list[str] = [],
-            max_error_length: int = 400,
-            step_info: Optional[CustomAgentStepInfo] = None,
+        self,
+        state: BrowserState,
+        result: Optional[List[ActionResult]] = None,
+        include_attributes: list[str] = [],
+        max_error_length: int = 400,
+        step_info: Optional[CustomAgentStepInfo] = None,
     ):
         self.state = state
         self.result = result
@@ -182,22 +180,24 @@ class CustomAgentMessagePrompt:
         if self.result:
             for i, result in enumerate(self.result):
                 if result.extracted_content:
-                    state_description += (
-                        f'\nResult of action {i + 1}/{len(self.result)}: {result.extracted_content}'
-                    )
+                    state_description += f"\nResult of action {i + 1}/{len(self.result)}: {result.extracted_content}"
                 if result.error:
                     # only use last 300 characters of error
-                    error = result.error[-self.max_error_length:]
-                    state_description += f'\nError of action {i + 1}/{len(self.result)}: ...{error}'
+                    error = result.error[-self.max_error_length :]
+                    state_description += (
+                        f"\nError of action {i + 1}/{len(self.result)}: ...{error}"
+                    )
 
         if self.state.screenshot:
             # Format message for vision model
             return HumanMessage(
                 content=[
-                    {'type': 'text', 'text': state_description},
+                    {"type": "text", "text": state_description},
                     {
-                        'type': 'image_url',
-                        'image_url': {'url': f'data:image/png;base64,{self.state.screenshot}'},
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:image/png;base64,{self.state.screenshot}"
+                        },
                     },
                 ]
             )
