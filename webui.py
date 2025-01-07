@@ -177,6 +177,7 @@ async def run_custom_agent(
             
             if not os.path.exists(chrome_exe):
                 raise ValueError(f"Chrome executable not found at {chrome_exe}")
+            
             if not chrome_use_data:
                 raise ValueError("You selected use own browser, but CHROME_USER_DATA environment variable is not set. Please set it to your Chrome user data directory.")
             
