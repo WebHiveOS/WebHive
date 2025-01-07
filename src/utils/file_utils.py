@@ -1,26 +1,25 @@
 import os
-import zipfile
-from datetime import datetime
+import time
 from pathlib import Path
+from typing import Dict, Optional
 
-def get_latest_files(directory: str, file_types: list = ['.webm', '.zip']) -> dict:
-    """Get the latest files of specified types from a directory."""
-    latest_files = {}
+def get_latest_files(directory: str, file_types: list = ['.webm', '.zip']) -> Dict[str, Optional[str]]:
+    """Get the latest recording and trace files"""
+    latest_files = {ext: None for ext in file_types}
     
     if not os.path.exists(directory):
+        os.makedirs(directory, exist_ok=True)
         return latest_files
-        
+
     for file_type in file_types:
-        matching_files = []
-        for root, _, files in os.walk(directory):
-            for file in files:
-                if file.endswith(file_type):
-                    full_path = os.path.join(root, file)
-                    matching_files.append((full_path, os.path.getmtime(full_path)))
-        
-        if matching_files:
-            # Get the most recently modified file
-            latest_file = max(matching_files, key=lambda x: x[1])[0]
-            latest_files[file_type] = latest_file
+        try:
+            matches = list(Path(directory).rglob(f"*{file_type}"))
+            if matches:
+                latest = max(matches, key=lambda p: p.stat().st_mtime)
+                # Only return files that are complete (not being written)
+                if time.time() - latest.stat().st_mtime > 1.0:
+                    latest_files[file_type] = str(latest)
+        except Exception as e:
+            print(f"Error getting latest {file_type} file: {e}")
             
     return latest_files

@@ -1,5 +1,6 @@
 browser-use
-langchain
+langchain-google-genai
+pyperclip
 gradio
 python-dotenv
 argparse
