@@ -8,11 +8,15 @@
 import base64
 import os
 
-from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from langchain_anthropic import ChatAnthropic
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_ollama import ChatOllama
-
+from langchain_openai import AzureChatOpenAI, ChatOpenAI
+import gradio as gr
+from openai import OpenAI, AzureOpenAI
+from google.generativeai import configure, list_models
+from langchain_anthropic import AnthropicLLM
+from langchain_ollama.llms import OllamaLLM
 
 def get_llm_model(provider: str, **kwargs):
     """
@@ -21,7 +25,7 @@ def get_llm_model(provider: str, **kwargs):
     :param kwargs:
     :return:
     """
-    if provider == 'anthropic':
+    if provider == "anthropic":
         if not kwargs.get("base_url", ""):
             base_url = "https://api.anthropic.com"
         else:
@@ -33,12 +37,12 @@ def get_llm_model(provider: str, **kwargs):
             api_key = kwargs.get("api_key")
 
         return ChatAnthropic(
-            model_name=kwargs.get("model_name", 'claude-3-5-sonnet-20240620'),
+            model_name=kwargs.get("model_name", "claude-3-5-sonnet-20240620"),
             temperature=kwargs.get("temperature", 0.0),
             base_url=base_url,
-            api_key=api_key
+            api_key=api_key,
         )
-    elif provider == 'openai':
+    elif provider == "openai":
         if not kwargs.get("base_url", ""):
             base_url = os.getenv("OPENAI_ENDPOINT", "https://api.openai.com/v1")
         else:
@@ -50,12 +54,12 @@ def get_llm_model(provider: str, **kwargs):
             api_key = kwargs.get("api_key")
 
         return ChatOpenAI(
-            model=kwargs.get("model_name", 'gpt-4o'),
+            model=kwargs.get("model_name", "gpt-4o"),
             temperature=kwargs.get("temperature", 0.0),
             base_url=base_url,
-            api_key=api_key
+            api_key=api_key,
         )
-    elif provider == 'deepseek':
+    elif provider == "deepseek":
         if not kwargs.get("base_url", ""):
             base_url = os.getenv("DEEPSEEK_ENDPOINT", "")
         else:
@@ -67,25 +71,26 @@ def get_llm_model(provider: str, **kwargs):
             api_key = kwargs.get("api_key")
 
         return ChatOpenAI(
-            model=kwargs.get("model_name", 'deepseek-chat'),
+            model=kwargs.get("model_name", "deepseek-chat"),
             temperature=kwargs.get("temperature", 0.0),
             base_url=base_url,
-            api_key=api_key
+            api_key=api_key,
         )
-    elif provider == 'gemini':
+    elif provider == "gemini":
         if not kwargs.get("api_key", ""):
             api_key = os.getenv("GOOGLE_API_KEY", "")
         else:
             api_key = kwargs.get("api_key")
         return ChatGoogleGenerativeAI(
-            model=kwargs.get("model_name", 'gemini-2.0-flash-exp'),
+            model=kwargs.get("model_name", "gemini-2.0-flash-exp"),
             temperature=kwargs.get("temperature", 0.0),
             google_api_key=api_key,
         )
-    elif provider == 'ollama':
+    elif provider == "ollama":
         return ChatOllama(
-            model=kwargs.get("model_name", 'qwen2.5:7b'),
+            model=kwargs.get("model_name", "qwen2.5:7b"),
             temperature=kwargs.get("temperature", 0.0),
+            num_ctx=128000,
         )
     elif provider == "azure_openai":
         if not kwargs.get("base_url", ""):
@@ -97,26 +102,56 @@ def get_llm_model(provider: str, **kwargs):
         else:
             api_key = kwargs.get("api_key")
         return AzureChatOpenAI(
-            model=kwargs.get("model_name", 'gpt-4o'),
+            model=kwargs.get("model_name", "gpt-4o"),
             temperature=kwargs.get("temperature", 0.0),
             api_version="2024-05-01-preview",
             azure_endpoint=base_url,
-            api_key=api_key
+            api_key=api_key,
         )
     else:
-        raise ValueError(f'Unsupported provider: {provider}')
+        raise ValueError(f"Unsupported provider: {provider}")
+    
+# Predefined model names for common providers
+model_names = {
+    "anthropic": ["claude-3-5-sonnet-20240620", "claude-3-opus-20240229"],
+    "openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"],
+    "deepseek": ["deepseek-chat"],
+    "gemini": ["gemini-2.0-flash-exp", "gemini-2.0-flash-thinking-exp", "gemini-1.5-flash-latest", "gemini-1.5-flash-8b-latest", "gemini-2.0-flash-thinking-exp-1219" ],
+    "ollama": ["qwen2.5:7b", "llama2:7b"],
+    "azure_openai": ["gpt-4o", "gpt-4", "gpt-3.5-turbo"]
+}
 
-from openai import OpenAI, AzureOpenAI
-from google.generativeai import configure, list_models
-from langchain_anthropic import AnthropicLLM
-from langchain_ollama.llms import OllamaLLM
+# Callback to update the model name dropdown based on the selected provider
+def update_model_dropdown(llm_provider, api_key=None, base_url=None):
+    """
+    Update the model name dropdown with predefined models for the selected provider.
+    """
+    # Use API keys from .env if not provided
+    if not api_key:
+        api_key = os.getenv(f"{llm_provider.upper()}_API_KEY", "")
+    if not base_url:
+        base_url = os.getenv(f"{llm_provider.upper()}_BASE_URL", "")
 
+    # Use predefined models for the selected provider
+    if llm_provider in model_names:
+        return gr.Dropdown(choices=model_names[llm_provider], value=model_names[llm_provider][0], interactive=True)
+    else:
+        return gr.Dropdown(choices=[], value="", interactive=True, allow_custom_value=True)
+    
 def fetch_available_models(llm_provider: str, api_key: str = None, base_url: str = None) -> list[str]:
+    """
+    Fetch available models for the selected LLM provider using API keys from .env by default.
+    """
     try:
+        # Use API keys from .env if not provided
+        if not api_key:
+            api_key = os.getenv(f"{llm_provider.upper()}_API_KEY", "")
+        if not base_url:
+            base_url = os.getenv(f"{llm_provider.upper()}_BASE_URL", "")
+
         if llm_provider == "anthropic":
             client = AnthropicLLM(api_key=api_key)
-            # Handle model fetching appropriately for Anthropic
-            return ["claude-3-5-sonnet-20240620"]  # Replace with actual model fetching logic
+            return ["claude-3-5-sonnet-20240620", "claude-3-opus-20240229"]  # Example models
 
         elif llm_provider == "openai":
             client = OpenAI(api_key=api_key, base_url=base_url)
@@ -124,8 +159,7 @@ def fetch_available_models(llm_provider: str, api_key: str = None, base_url: str
             return [model.id for model in models.data]
 
         elif llm_provider == "deepseek":
-            # For Deepseek, we'll return the default model for now
-            return ["deepseek-chat"]
+            return ["deepseek-chat"]  # Example model
 
         elif llm_provider == "gemini":
             configure(api_key=api_key)
@@ -149,7 +183,7 @@ def fetch_available_models(llm_provider: str, api_key: str = None, base_url: str
     except Exception as e:
         print(f"Error fetching models from {llm_provider}: {e}")
         return []
-
+        
 def encode_image(img_path):
     if not img_path:
         return None
