@@ -4,38 +4,37 @@
 # @Email   : wenshaoguo1026@gmail.com
 # @Project : browser-use-webui
 # @FileName: webui.py
+
 import pdb
 
 from dotenv import load_dotenv
 
 load_dotenv()
 import argparse
-
-import asyncio
+import os
 
 import gradio as gr
-import asyncio
-import os
-from pprint import pprint
-from typing import List, Dict, Any
+import argparse
 
-from playwright.async_api import async_playwright
+
+from gradio.themes import Base, Default, Soft, Monochrome, Glass, Origin, Citrus, Ocean
+import asyncio
+import os, glob
+from browser_use.agent.service import Agent
 from browser_use.browser.browser import Browser, BrowserConfig
 from browser_use.browser.context import (
-    BrowserContext,
     BrowserContextConfig,
     BrowserContextWindowSize,
 )
-from browser_use.agent.service import Agent
+from playwright.async_api import async_playwright
 
-from src.browser.custom_browser import CustomBrowser, BrowserConfig
-from src.browser.custom_context import BrowserContext, BrowserContextConfig
-from src.controller.custom_controller import CustomController
 from src.agent.custom_agent import CustomAgent
 from src.agent.custom_prompts import CustomSystemPrompt
-
+from src.browser.custom_browser import CustomBrowser
+from src.browser.custom_context import BrowserContextConfig
+from src.controller.custom_controller import CustomController
 from src.utils import utils
-from src.utils.utils import fetch_available_models
+from src.utils.utils import update_model_dropdown, fetch_available_models
 
 async def run_browser_agent(
         agent_type,
@@ -53,14 +52,18 @@ async def run_browser_agent(
         task,
         add_infos,
         max_steps,
-        use_vision
+        use_vision,
+        max_actions_per_step,
+        tool_call_in_content
 ):
     # Ensure the recording directory exists
     os.makedirs(save_recording_path, exist_ok=True)
 
     # Get the list of existing videos before the agent runs
-    existing_videos = set(glob.glob(os.path.join(save_recording_path, '*.[mM][pP]4')) + 
-                          glob.glob(os.path.join(save_recording_path, '*.[wW][eE][bB][mM]')))
+    existing_videos = set(
+        glob.glob(os.path.join(save_recording_path, "*.[mM][pP]4"))
+        + glob.glob(os.path.join(save_recording_path, "*.[wW][eE][bB][mM]"))
+    )
 
     # Run the agent
     llm = utils.get_llm_model(
@@ -68,7 +71,7 @@ async def run_browser_agent(
         model_name=llm_model_name,
         temperature=llm_temperature,
         base_url=llm_base_url,
-        api_key=llm_api_key
+        api_key=llm_api_key,
     )
     if agent_type == "org":
         final_result, errors, model_actions, model_thoughts = await run_org_agent(
@@ -80,7 +83,9 @@ async def run_browser_agent(
             save_recording_path=save_recording_path,
             task=task,
             max_steps=max_steps,
-            use_vision=use_vision
+            use_vision=use_vision,
+            max_actions_per_step=max_actions_per_step,
+            tool_call_in_content=tool_call_in_content
         )
     elif agent_type == "custom":
         final_result, errors, model_actions, model_thoughts = await run_custom_agent(
@@ -94,14 +99,18 @@ async def run_browser_agent(
             task=task,
             add_infos=add_infos,
             max_steps=max_steps,
-            use_vision=use_vision
+            use_vision=use_vision,
+            max_actions_per_step=max_actions_per_step,
+            tool_call_in_content=tool_call_in_content
         )
     else:
         raise ValueError(f"Invalid agent type: {agent_type}")
 
     # Get the list of videos after the agent runs
-    new_videos = set(glob.glob(os.path.join(save_recording_path, '*.[mM][pP]4')) + 
-                     glob.glob(os.path.join(save_recording_path, '*.[wW][eE][bB][mM]')))
+    new_videos = set(
+        glob.glob(os.path.join(save_recording_path, "*.[mM][pP]4"))
+        + glob.glob(os.path.join(save_recording_path, "*.[wW][eE][bB][mM]"))
+    )
 
     # Find the newly created video
     latest_video = None
@@ -109,6 +118,7 @@ async def run_browser_agent(
         latest_video = list(new_videos - existing_videos)[0]  # Get the first new video
 
     return final_result, errors, model_actions, model_thoughts, latest_video
+
 
 async def run_org_agent(
         llm,
@@ -119,21 +129,26 @@ async def run_org_agent(
         save_recording_path,
         task,
         max_steps,
-        use_vision
+        use_vision,
+        max_actions_per_step,
+        tool_call_in_content
+
 ):
     browser = Browser(
         config=BrowserConfig(
             headless=headless,
             disable_security=disable_security,
-            extra_chromium_args=[f'--window-size={window_w},{window_h}'],
+            extra_chromium_args=[f"--window-size={window_w},{window_h}"],
         )
     )
     async with await browser.new_context(
             config=BrowserContextConfig(
-                trace_path='./tmp/traces',
+                trace_path="./tmp/traces",
                 save_recording_path=save_recording_path if save_recording_path else None,
                 no_viewport=False,
-                browser_window_size=BrowserContextWindowSize(width=window_w, height=window_h),
+                browser_window_size=BrowserContextWindowSize(
+                    width=window_w, height=window_h
+                ),
             )
     ) as browser_context:
         agent = Agent(
@@ -141,6 +156,8 @@ async def run_org_agent(
             llm=llm,
             use_vision=use_vision,
             browser_context=browser_context,
+            max_actions_per_step=max_actions_per_step,
+            tool_call_in_content=tool_call_in_content
         )
         history = await agent.run(max_steps=max_steps)
 
@@ -150,6 +167,7 @@ async def run_org_agent(
         model_thoughts = history.model_thoughts()
     await browser.close()
     return final_result, errors, model_actions, model_thoughts
+
 
 async def run_custom_agent(
         llm,
@@ -162,7 +180,9 @@ async def run_custom_agent(
         task,
         add_infos,
         max_steps,
-        use_vision
+        use_vision,
+        max_actions_per_step,
+        tool_call_in_content
 ):
     controller = CustomController()
     playwright = None
@@ -172,20 +192,29 @@ async def run_custom_agent(
             playwright = await async_playwright().start()
             chrome_exe = os.getenv("CHROME_PATH", "")
             chrome_use_data = os.getenv("CHROME_USER_DATA", "")
+
+            if chrome_exe == "":
+                chrome_exe = None
+            elif not os.path.exists(chrome_exe):
+                raise ValueError(f"Chrome executable not found at {chrome_exe}")
+            
+            if chrome_use_data == "":
+                chrome_use_data = None
+
             browser_context_ = await playwright.chromium.launch_persistent_context(
                 user_data_dir=chrome_use_data,
                 executable_path=chrome_exe,
                 no_viewport=False,
                 headless=headless,  # 保持浏览器窗口可见
                 user_agent=(
-                    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
-                    '(KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36'
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                    "(KHTML, like Gecko) Chrome/85.0.4183.102 Safari/537.36"
                 ),
                 java_script_enabled=True,
                 bypass_csp=disable_security,
                 ignore_https_errors=disable_security,
                 record_video_dir=save_recording_path if save_recording_path else None,
-                record_video_size={'width': window_w, 'height': window_h}
+                record_video_size={"width": window_w, "height": window_h},
             )
         else:
             browser_context_ = None
@@ -194,17 +223,21 @@ async def run_custom_agent(
             config=BrowserConfig(
                 headless=headless,
                 disable_security=disable_security,
-                extra_chromium_args=[f'--window-size={window_w},{window_h}'],
+                extra_chromium_args=[f"--window-size={window_w},{window_h}"],
             )
         )
         async with await browser.new_context(
                 config=BrowserContextConfig(
-                    trace_path='./tmp/result_processing',
-                    save_recording_path=save_recording_path if save_recording_path else None,
+                    trace_path="./tmp/result_processing",
+                    save_recording_path=save_recording_path
+                    if save_recording_path
+                    else None,
                     no_viewport=False,
-                    browser_window_size=BrowserContextWindowSize(width=window_w, height=window_h),
+                    browser_window_size=BrowserContextWindowSize(
+                        width=window_w, height=window_h
+                    ),
                 ),
-                context=browser_context_
+                context=browser_context_,
         ) as browser_context:
             agent = CustomAgent(
                 task=task,
@@ -213,7 +246,9 @@ async def run_custom_agent(
                 llm=llm,
                 browser_context=browser_context,
                 controller=controller,
-                system_prompt_class=CustomSystemPrompt
+                system_prompt_class=CustomSystemPrompt,
+                max_actions_per_step=max_actions_per_step,
+                tool_call_in_content=tool_call_in_content
             )
             history = await agent.run(max_steps=max_steps)
 
@@ -224,6 +259,7 @@ async def run_custom_agent(
 
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         final_result = ""
         errors = str(e) + "\n" + traceback.format_exc()
@@ -240,24 +276,6 @@ async def run_custom_agent(
         await browser.close()
     return final_result, errors, model_actions, model_thoughts
 
-def update_model_dropdown(llm_provider, api_key, base_url):
-    """
-    Callback function to update the model dropdown based on the selected LLM provider.
-    """
-    if not api_key:
-        return gr.Dropdown(choices=[], value="", interactive=False)
-
-    models = fetch_available_models(llm_provider, api_key, base_url)
-    if models:
-        return gr.Dropdown(choices=models, value=models[0], interactive=True)
-    else:
-        return gr.Dropdown(choices=[], value="", interactive=True, allow_custom_value=True)
-    
-import argparse
-import gradio as gr
-from gradio.themes import Base, Default, Soft, Monochrome, Glass, Origin, Citrus, Ocean
-import os, glob
-
 # Define the theme map globally
 theme_map = {
     "Default": Default(),
@@ -267,8 +285,9 @@ theme_map = {
     "Origin": Origin(),
     "Citrus": Citrus(),
     "Ocean": Ocean(),
-    "Base":Base()
+    "Base": Base()
 }
+
 
 def create_ui(theme_name="Ocean"):
     css = """
@@ -297,25 +316,27 @@ def create_ui(theme_name="Ocean"):
         }
     }
     """
-    
-    with gr.Blocks(title="Browser Use WebUI", theme=theme_map[theme_name], css=css, js=js) as demo:
+
+    with gr.Blocks(
+            title="Browser Use WebUI", theme=theme_map[theme_name], css=css, js=js
+    ) as demo:
         with gr.Row():
             gr.Markdown(
                 """
                 # 🌐 Browser Use WebUI
                 ### Control your browser with AI assistance
                 """,
-                elem_classes=["header-text"]
+                elem_classes=["header-text"],
             )
-        
+
         with gr.Tabs() as tabs:
-            with gr.TabItem("🤖 Agent Settings", id=1):
+            with gr.TabItem("⚙️ Agent Settings", id=1):
                 with gr.Group():
                     agent_type = gr.Radio(
                         ["org", "custom"],
                         label="Agent Type",
                         value="custom",
-                        info="Select the type of agent to use"
+                        info="Select the type of agent to use",
                     )
                     max_steps = gr.Slider(
                         minimum=1,
@@ -323,12 +344,25 @@ def create_ui(theme_name="Ocean"):
                         value=100,
                         step=1,
                         label="Max Run Steps",
-                        info="Maximum number of steps the agent will take"
+                        info="Maximum number of steps the agent will take",
+                    )
+                    max_actions_per_step = gr.Slider(
+                        minimum=1,
+                        maximum=20,
+                        value=10,
+                        step=1,
+                        label="Max Actions per Step",
+                        info="Maximum number of actions the agent will take per step",
                     )
                     use_vision = gr.Checkbox(
                         label="Use Vision",
                         value=True,
-                        info="Enable visual processing capabilities"
+                        info="Enable visual processing capabilities",
+                    )
+                    tool_call_in_content = gr.Checkbox(
+                        label="Use Tool Calls in Content",
+                        value=True,
+                        info="Enable Tool Calls in content",
                     )
 
             with gr.TabItem("🔧 LLM Configuration", id=2):
@@ -342,13 +376,8 @@ def create_ui(theme_name="Ocean"):
                     llm_model_name = gr.Dropdown(
                         label="Model Name",
                         value="",
-                        info="Specify the model to use"
-                    )
-                    llm_model_dropdown = gr.Dropdown(
-                        [],
-                        label="Model Name (Optional)",
-                        value="",
-                        interactive=False,
+                        interactive=True,
+                        allow_custom_value=True,  # Allow users to input custom model names
                         info="Select a model from the dropdown or type a custom model name"
                     )
                     llm_temperature = gr.Slider(
@@ -362,13 +391,24 @@ def create_ui(theme_name="Ocean"):
                     with gr.Row():
                         llm_base_url = gr.Textbox(
                             label="Base URL",
+                            value=os.getenv(f"{llm_provider.value.upper()}_BASE_URL ", ""),  # Default to .env value
                             info="API endpoint URL (if required)"
                         )
                         llm_api_key = gr.Textbox(
                             label="API Key",
                             type="password",
-                            info="Your API key"
+                            value=os.getenv(f"{llm_provider.value.upper()}_API_KEY", ""),  # Default to .env value
+                            info="Your API key (leave blank to use .env)"
                         )
+                    
+                    # Add a button to fetch available models
+                    fetch_models_button = gr.Button("🔄 Fetch Available Models", variant="secondary")
+                    fetch_models_output = gr.Textbox(
+                        label="Available Models",
+                        lines=3,
+                        interactive=False,
+                        info="List of available models for the selected provider"
+                    )
 
             with gr.TabItem("🌐 Browser Settings", id=3):
                 with gr.Group():
@@ -376,51 +416,51 @@ def create_ui(theme_name="Ocean"):
                         use_own_browser = gr.Checkbox(
                             label="Use Own Browser",
                             value=False,
-                            info="Use your existing browser instance"
+                            info="Use your existing browser instance",
                         )
                         headless = gr.Checkbox(
                             label="Headless Mode",
                             value=False,
-                            info="Run browser without GUI"
+                            info="Run browser without GUI",
                         )
                         disable_security = gr.Checkbox(
                             label="Disable Security",
                             value=True,
-                            info="Disable browser security features"
+                            info="Disable browser security features",
                         )
-                    
+
                     with gr.Row():
                         window_w = gr.Number(
                             label="Window Width",
-                            value=1920,
-                            info="Browser window width"
+                            value=1280,
+                            info="Browser window width",
                         )
                         window_h = gr.Number(
                             label="Window Height",
-                            value=1080,
-                            info="Browser window height"
+                            value=1100,
+                            info="Browser window height",
                         )
-                    
+
                     save_recording_path = gr.Textbox(
                         label="Recording Path",
                         placeholder="e.g. ./tmp/record_videos",
                         value="./tmp/record_videos",
-                        info="Path to save browser recordings"
+                        info="Path to save browser recordings",
                     )
 
-            with gr.TabItem("📝 Task Settings", id=4):
+            with gr.TabItem("🤖 Run Agent", id=4):
                 task = gr.Textbox(
                     label="Task Description",
                     lines=4,
                     placeholder="Enter your task here...",
                     value="go to google.com and type 'OpenAI' click search and give me the first url",
-                    info="Describe what you want the agent to do"
+                    info="Describe what you want the agent to do",
                 )
                 add_infos = gr.Textbox(
                     label="Additional Information",
                     lines=3,
                     placeholder="Add any helpful context or instructions...",
-                    info="Optional hints to help the LLM complete the task"
+                    info="Optional hints to help the LLM complete the task",
                 )
 
                 with gr.Row():
@@ -435,54 +475,41 @@ def create_ui(theme_name="Ocean"):
                     with gr.Row():
                         with gr.Column():
                             final_result_output = gr.Textbox(
-                                label="Final Result",
-                                lines=3,
-                                show_label=True
+                                label="Final Result", lines=3, show_label=True
                             )
                         with gr.Column():
                             errors_output = gr.Textbox(
-                                label="Errors",
-                                lines=3,
-                                show_label=True
+                                label="Errors", lines=3, show_label=True
                             )
                     with gr.Row():
                         with gr.Column():
                             model_actions_output = gr.Textbox(
-                                label="Model Actions",
-                                lines=3,
-                                show_label=True
+                                label="Model Actions", lines=3, show_label=True
                             )
                         with gr.Column():
                             model_thoughts_output = gr.Textbox(
-                                label="Model Thoughts",
-                                lines=3,
-                                show_label=True
+                                label="Model Thoughts", lines=3, show_label=True
                             )
 
-        # Attach the callback to the llm_provider dropdown
+        # Attach the callback to the LLM provider dropdown
         llm_provider.change(
-           fn=update_model_dropdown,
-           inputs=[llm_provider, llm_api_key, llm_base_url],
-           outputs=llm_model_dropdown
+            lambda provider, api_key, base_url: update_model_dropdown(provider, api_key, base_url),
+            inputs=[llm_provider, llm_api_key, llm_base_url],
+            outputs=llm_model_name
+        )  
+
+        # Attach the callback to the fetch models button
+        fetch_models_button.click(
+            fetch_available_models,
+            inputs=[llm_provider, llm_api_key, llm_base_url],
+            outputs=fetch_models_output
         )
-
-        # Update the model name input field when a model is selected from the dropdown
-        llm_model_dropdown.change(
-          fn=lambda x: x,
-          inputs=llm_model_dropdown,
-          outputs=llm_model_name
-        )                    
-
+          
         # Run button click handler
         run_button.click(
             fn=run_browser_agent,
-            inputs=[
-                agent_type, llm_provider, llm_model_name, llm_temperature,
-                llm_base_url, llm_api_key, use_own_browser, headless,
-                disable_security, window_w, window_h, save_recording_path,
-                task, add_infos, max_steps, use_vision
-            ],
-            outputs=[final_result_output, errors_output, model_actions_output, model_thoughts_output, recording_display]
+            inputs=[agent_type, llm_provider, llm_model_name, llm_temperature, llm_base_url, llm_api_key, use_own_browser, headless, disable_security, window_w, window_h, save_recording_path, task, add_infos, max_steps, use_vision, max_actions_per_step, tool_call_in_content],
+            outputs=[final_result_output, errors_output, model_actions_output, model_thoughts_output, recording_display,],
         )
 
     return demo
