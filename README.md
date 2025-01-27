@@ -1,17 +1,10 @@
-<img src="./assets/web-ui.png" alt="Browser Use Web UI" width="full"/>
+<img src="./assets/text_plus_logo.png" alt="Web Hive" width="full"/>
 
 <br/>
 
-[![GitHub stars](https://img.shields.io/github/stars/browser-use/web-ui?style=social)](https://github.com/browser-use/web-ui/stargazers)
-[![Discord](https://img.shields.io/discord/1303749220842340412?color=7289DA&label=Discord&logo=discord&logoColor=white)](https://link.browser-use.com/discord)
-[![Documentation](https://img.shields.io/badge/Documentation-📕-blue)](https://docs.browser-use.com)
-[![WarmShao](https://img.shields.io/twitter/follow/warmshao?style=social)](https://x.com/warmshao)
+> This project is a fork of the browser-use project, with significant modifications and improvements. We acknowledge and thank the original authors for their foundational work.
 
-This project builds upon the foundation of the [browser-use](https://github.com/browser-use/browser-use), which is designed to make websites accessible for AI agents.
-
-We would like to officially thank [WarmShao](https://github.com/warmshao) for his contribution to this project.
-
-**WebUI:** is built on Gradio and supports a most of `browser-use` functionalities. This UI is designed to be user-friendly and enables easy interaction with the browser agent.
+**Web Hive:** is built on Gradio and supports most AI agent functionalities. This UI is designed to be user-friendly and enables easy interaction with the browser agent.
 
 **Expanded LLM Support:** We've integrated support for various Large Language Models (LLMs), including: Gemini, OpenAI, Azure OpenAI, Anthropic, DeepSeek, Ollama etc. And we plan to add support for even more models in the future.
 
@@ -80,7 +73,7 @@ playwright install
    ```
 
 4. **Access the Application:**
-   - WebUI: `http://localhost:7788`
+   - Web Hive: `http://localhost:7788`
    - VNC Viewer (to see browser interactions): `http://localhost:6080/vnc.html`
    
    Default VNC password is "vncpassword". You can change it by setting the `VNC_PASSWORD` environment variable in your `.env` file.
@@ -90,13 +83,13 @@ playwright install
 
 ### Local Setup
 1.  Copy `.env.example` to `.env` and set your environment variables, including API keys for the LLM. `cp .env.example .env`
-2.  **Run the WebUI:**
+2.  **Run Web Hive:**
     ```bash
-    python webui.py --ip 127.0.0.1 --port 7788
+    python webhive.py --ip 127.0.0.1 --port 7788
     ```
-4. WebUI options:
-   - `--ip`: The IP address to bind the WebUI to. Default is `127.0.0.1`.
-   - `--port`: The port to bind the WebUI to. Default is `7788`.
+4. Web Hive options:
+   - `--ip`: The IP address to bind Web Hive to. Default is `127.0.0.1`.
+   - `--port`: The port to bind Web Hive to. Default is `7788`.
    - `--theme`: The theme for the user interface. Default is `Ocean`.
      - **Default**: The standard theme with a balanced design.
      - **Soft**: A gentle, muted color scheme for a relaxed viewing experience.
@@ -106,7 +99,7 @@ playwright install
      - **Citrus**: A vibrant, citrus-inspired palette with bright and fresh colors.
      - **Ocean** (default): A blue, ocean-inspired theme providing a calming effect.
    - `--dark-mode`: Enables dark mode for the user interface.
-3.  **Access the WebUI:** Open your web browser and navigate to `http://127.0.0.1:7788`.
+3.  **Access Web Hive:** Open your web browser and navigate to `http://127.0.0.1:7788`.
 4.  **Using Your Own Browser(Optional):**
     - Set `CHROME_PATH` to the executable path of your browser and `CHROME_USER_DATA` to the user data directory of your browser.
       - Windows
@@ -121,7 +114,7 @@ playwright install
          CHROME_USER_DATA="~/Library/Application Support/Google/Chrome/Profile 1"
         ```
     - Close all Chrome windows
-    - Open the WebUI in a non-Chrome browser, such as Firefox or Edge. This is important because the persistent browser context will use the Chrome data when running the agent.
+    - Open Web Hive in a non-Chrome browser, such as Firefox or Edge. This is important because the persistent browser context will use the Chrome data when running the agent.
     - Check the "Use Own Browser" option within the Browser Settings.
 5. **Keep Browser Open(Optional):**
     - Set `CHROME_PERSISTENT_SESSION=true` in the `.env` file.

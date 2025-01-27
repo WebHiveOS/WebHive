@@ -608,15 +608,32 @@ def create_ui(config, theme_name="Ocean"):
     """
 
     with gr.Blocks(
-            title="Browser Use WebUI", theme=theme_map[theme_name], css=css, js=js
+            title="Web Hive", theme=theme_map[theme_name], css=css, js=js
     ) as demo:
         with gr.Row():
-            gr.Markdown(
+            gr.Image(
+                value="assets/text_plus_logo.png",
+                show_label=False,
+                container=False,
+                height=80,
+                width=300
+            )
+
+        with gr.Row():
+            gr.HTML(
                 """
-                # 🌐 Browser Use WebUI
-                ### Control your browser with AI assistance
-                """,
-                elem_classes=["header-text"],
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <h2 style="
+                        background: linear-gradient(to right, #ffffff, #ffd700);
+                        -webkit-background-clip: text;
+                        -webkit-text-fill-color: transparent;
+                        font-size: 24px;
+                        margin: 0;
+                    ">
+                        Empowering AI to Navigate the Web
+                    </h2>
+                </div>
+                """
             )
 
         with gr.Tabs() as tabs:
