@@ -2,6 +2,10 @@
 
 <br/>
 
+<a href="https://twitter.com/WebHiveOS" target="_blank">
+  <img src="https://img.shields.io/twitter/follow/WebHiveOS?style=social" alt="Follow @WebHiveOS on Twitter" />
+</a>
+
 > This project is a fork of the browser-use project, with significant modifications and improvements. We acknowledge and thank the original authors for their foundational work.
 
 **Web Hive:** is built on Gradio and supports most AI agent functionalities. This UI is designed to be user-friendly and enables easy interaction with the browser agent.
