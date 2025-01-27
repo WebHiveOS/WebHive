@@ -1,4 +1,4 @@
-<img src="./assets/webhive-logo.png" alt="Web Hive" width="full"/>
+<img src="./assets/webhive-logo-new.png" alt="Web Hive" width="full"/>
 
 <br/>
 
