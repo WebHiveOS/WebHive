@@ -33,6 +33,7 @@ from src.controller.custom_controller import CustomController
 from gradio.themes import Citrus, Default, Glass, Monochrome, Ocean, Origin, Soft, Base
 from src.utils.default_config_settings import default_config, load_config_from_file, save_config_to_file, save_current_config, update_ui_from_config
 from src.utils.utils import update_model_dropdown, get_latest_files, capture_screenshot
+from langchain_ollama import ChatOllama
 
 
 # Global variables for persistence
@@ -56,17 +57,17 @@ async def stop_agent():
 
         # Return UI updates
         return (
-            message,                                        # errors_output
-            gr.update(value="Stopping...", interactive=False),  # stop_button
-            gr.update(interactive=False),                      # run_button
+            message,
+            {"value": "Stopping...", "interactive": False},  # stop_button
+            {"interactive": False}                           # run_button
         )
     except Exception as e:
         error_msg = f"Error during stop: {str(e)}"
         logger.error(error_msg)
         return (
             error_msg,
-            gr.update(value="Stop", interactive=True),
-            gr.update(interactive=True)
+            {"value": "Stop", "interactive": True},
+            {"interactive": True}
         )
 
 async def run_browser_agent(
@@ -90,8 +91,7 @@ async def run_browser_agent(
         add_infos,
         max_steps,
         use_vision,
-        max_actions_per_step,
-        tool_call_in_content
+        max_actions_per_step
 ):
     global _global_agent_state
     _global_agent_state.clear_stop()  # Clear any previous stop requests
@@ -136,8 +136,7 @@ async def run_browser_agent(
                 task=task,
                 max_steps=max_steps,
                 use_vision=use_vision,
-                max_actions_per_step=max_actions_per_step,
-                tool_call_in_content=tool_call_in_content
+                max_actions_per_step=max_actions_per_step
             )
         elif agent_type == "custom":
             final_result, errors, model_actions, model_thoughts, trace_file, history_file = await run_custom_agent(
@@ -155,8 +154,7 @@ async def run_browser_agent(
                 add_infos=add_infos,
                 max_steps=max_steps,
                 use_vision=use_vision,
-                max_actions_per_step=max_actions_per_step,
-                tool_call_in_content=tool_call_in_content
+                max_actions_per_step=max_actions_per_step
             )
         else:
             raise ValueError(f"Invalid agent type: {agent_type}")
@@ -179,8 +177,8 @@ async def run_browser_agent(
             latest_video,
             trace_file,
             history_file,
-            gr.update(value="Stop", interactive=True),  # Re-enable stop button
-            gr.update(interactive=True)    # Re-enable run button
+            {"value": "Stop", "interactive": True},  # Re-enable stop button
+            {"interactive": True}    # Re-enable run button
         )
 
     except Exception as e:
@@ -188,15 +186,15 @@ async def run_browser_agent(
         traceback.print_exc()
         errors = str(e) + "\n" + traceback.format_exc()
         return (
-            '',                                         # final_result
-            errors,                                     # errors
-            '',                                         # model_actions
-            '',                                         # model_thoughts
-            None,                                       # latest_video
-            None,                                       # history_file
-            None,                                       # trace_file
-            gr.update(value="Stop", interactive=True),  # Re-enable stop button
-            gr.update(interactive=True)    # Re-enable run button
+            '',
+            errors,
+            '',
+            '',
+            None,
+            None,
+            None,
+            {"value": "Stop", "interactive": True},
+            {"interactive": True}
         )
 
 
@@ -214,8 +212,7 @@ async def run_org_agent(
         task,
         max_steps,
         use_vision,
-        max_actions_per_step,
-        tool_call_in_content
+        max_actions_per_step
 ):
     try:
         global _global_browser, _global_browser_context, _global_agent_state
@@ -223,20 +220,24 @@ async def run_org_agent(
         # Clear any previous stop request
         _global_agent_state.clear_stop()
 
+        extra_chromium_args = [f"--window-size={window_w},{window_h}"]
         if use_own_browser:
             chrome_path = os.getenv("CHROME_PATH", None)
             if chrome_path == "":
                 chrome_path = None
+            chrome_user_data = os.getenv("CHROME_USER_DATA", None)
+            if chrome_user_data:
+                extra_chromium_args += [f"--user-data-dir={chrome_user_data}"]
         else:
             chrome_path = None
-
+            
         if _global_browser is None:
             _global_browser = Browser(
                 config=BrowserConfig(
                     headless=headless,
                     disable_security=disable_security,
                     chrome_instance_path=chrome_path,
-                    extra_chromium_args=[f"--window-size={window_w},{window_h}"],
+                    extra_chromium_args=extra_chromium_args,
                 )
             )
 
@@ -258,8 +259,7 @@ async def run_org_agent(
             use_vision=use_vision,
             browser=_global_browser,
             browser_context=_global_browser_context,
-            max_actions_per_step=max_actions_per_step,
-            tool_call_in_content=tool_call_in_content
+            max_actions_per_step=max_actions_per_step
         )
         history = await agent.run(max_steps=max_steps)
 
@@ -305,8 +305,7 @@ async def run_custom_agent(
         add_infos,
         max_steps,
         use_vision,
-        max_actions_per_step,
-        tool_call_in_content
+        max_actions_per_step
 ):
     try:
         global _global_browser, _global_browser_context, _global_agent_state
@@ -357,7 +356,6 @@ async def run_custom_agent(
             controller=controller,
             system_prompt_class=CustomSystemPrompt,
             max_actions_per_step=max_actions_per_step,
-            tool_call_in_content=tool_call_in_content,
             agent_state=_global_agent_state
         )
         history = await agent.run(max_steps=max_steps)
@@ -410,8 +408,7 @@ async def run_with_stream(
     add_infos,
     max_steps,
     use_vision,
-    max_actions_per_step,
-    tool_call_in_content
+    max_actions_per_step
 ):
     global _global_agent_state
     stream_vw = 80
@@ -438,8 +435,7 @@ async def run_with_stream(
             add_infos=add_infos,
             max_steps=max_steps,
             use_vision=use_vision,
-            max_actions_per_step=max_actions_per_step,
-            tool_call_in_content=tool_call_in_content
+            max_actions_per_step=max_actions_per_step
         )
         # Add HTML content at the start of the result array
         html_content = f"<h1 style='width:{stream_vw}vw; height:{stream_vh}vh'>Using browser...</h1>"
@@ -470,8 +466,7 @@ async def run_with_stream(
                     add_infos=add_infos,
                     max_steps=max_steps,
                     use_vision=use_vision,
-                    max_actions_per_step=max_actions_per_step,
-                    tool_call_in_content=tool_call_in_content
+                    max_actions_per_step=max_actions_per_step
                 )
             )
 
@@ -502,8 +497,8 @@ async def run_with_stream(
                         latest_videos,
                         trace,
                         history_file,
-                        gr.update(value="Stopping...", interactive=False),  # stop_button
-                        gr.update(interactive=False),  # run_button
+                        gr.Button(value="Stopping...", interactive=False),  # stop_button
+                        gr.Button(interactive=False),  # run_button
                     ]
                     break
                 else:
@@ -516,8 +511,8 @@ async def run_with_stream(
                         latest_videos,
                         trace,
                         history_file,
-                        gr.update(value="Stop", interactive=True),  # Re-enable stop button
-                        gr.update(interactive=True)  # Re-enable run button
+                        gr.Button(value="Stop", interactive=True),  # Re-enable stop button
+                        gr.Button(interactive=True)  # Re-enable run button
                     ]
                 await asyncio.sleep(0.05)
 
@@ -552,8 +547,8 @@ async def run_with_stream(
                 None,
                 None,
                 None,
-                gr.update(value="Stop", interactive=True),  # Re-enable stop button
-                gr.update(interactive=True)    # Re-enable run button
+                gr.Button(value="Stop", interactive=True),  # Re-enable stop button
+                gr.Button(interactive=True)    # Re-enable run button
             ]
 
 # Define the theme map globally
@@ -608,8 +603,17 @@ def create_ui(config, theme_name="Ocean"):
     """
 
     with gr.Blocks(
-            title="Web Hive", theme=theme_map[theme_name], css=css, js=js
+            title="WebHive", theme=theme_map[theme_name], css=css, js=js
     ) as demo:
+        with gr.Row():
+            gr.Markdown(
+                """
+                # 🐝 WebHive
+                ### Your AI-Powered Browser Assistant
+                """,
+                elem_classes=["header-text"],
+            )
+
         with gr.Row():
             gr.Image(
                 value="assets/text_plus_logo.png",
@@ -617,23 +621,6 @@ def create_ui(config, theme_name="Ocean"):
                 container=False,
                 height=80,
                 width=300
-            )
-
-        with gr.Row():
-            gr.HTML(
-                """
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <h2 style="
-                        background: linear-gradient(to right, #ffffff, #ffd700);
-                        -webkit-background-clip: text;
-                        -webkit-text-fill-color: transparent;
-                        font-size: 24px;
-                        margin: 0;
-                    ">
-                        Empowering AI to Navigate the Web
-                    </h2>
-                </div>
-                """
             )
 
         with gr.Tabs() as tabs:
@@ -665,11 +652,6 @@ def create_ui(config, theme_name="Ocean"):
                         label="Use Vision",
                         value=config['use_vision'],
                         info="Enable visual processing capabilities",
-                    )
-                    tool_call_in_content = gr.Checkbox(
-                        label="Use Tool Calls in Content",
-                        value=config['tool_call_in_content'],
-                        info="Enable Tool Calls in content",
                     )
 
             with gr.TabItem("🔧 LLM Configuration", id=2):
@@ -820,7 +802,7 @@ def create_ui(config, theme_name="Ocean"):
                     fn=update_ui_from_config,
                     inputs=[config_file_input],
                     outputs=[
-                        agent_type, max_steps, max_actions_per_step, use_vision, tool_call_in_content,
+                        agent_type, max_steps, max_actions_per_step, use_vision,
                         llm_provider, llm_model_name, llm_temperature, llm_base_url, llm_api_key,
                         use_own_browser, keep_browser_open, headless, disable_security, enable_recording,
                         window_w, window_h, save_recording_path, save_trace_path, save_agent_history_path,
@@ -831,7 +813,7 @@ def create_ui(config, theme_name="Ocean"):
                 save_config_button.click(
                     fn=save_current_config,
                     inputs=[
-                        agent_type, max_steps, max_actions_per_step, use_vision, tool_call_in_content,
+                        agent_type, max_steps, max_actions_per_step, use_vision,
                         llm_provider, llm_model_name, llm_temperature, llm_base_url, llm_api_key,
                         use_own_browser, keep_browser_open, headless, disable_security,
                         enable_recording, window_w, window_h, save_recording_path, save_trace_path,
@@ -883,7 +865,7 @@ def create_ui(config, theme_name="Ocean"):
                             agent_type, llm_provider, llm_model_name, llm_temperature, llm_base_url, llm_api_key,
                             use_own_browser, keep_browser_open, headless, disable_security, window_w, window_h,
                             save_recording_path, save_agent_history_path, save_trace_path,  # Include the new path
-                            enable_recording, task, add_infos, max_steps, use_vision, max_actions_per_step, tool_call_in_content
+                            enable_recording, task, add_infos, max_steps, use_vision, max_actions_per_step
                         ],
                     outputs=[
                         browser_view,           # Browser view
