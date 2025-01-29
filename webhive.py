@@ -606,21 +606,31 @@ def create_ui(config, theme_name="Ocean"):
             title="WebHive", theme=theme_map[theme_name], css=css, js=js
     ) as demo:
         with gr.Row():
-            gr.Markdown(
-                """
-                # 🐝 WebHive
-                ### Your AI-Powered Browser Assistant
-                """,
-                elem_classes=["header-text"],
-            )
-
-        with gr.Row():
             gr.Image(
                 value="assets/text_plus_logo.png",
                 show_label=False,
                 container=False,
                 height=80,
                 width=300
+            )
+            
+        with gr.Row():
+            gr.Markdown(
+                """
+                <div style="text-align: center; margin-top: 10px; margin-bottom: 30px;">
+                    <p style="font-size: 1.5em; 
+                             background: linear-gradient(to right, #FFFFFF, #FFD700, #DAA520); 
+                             -webkit-background-clip: text; 
+                             -webkit-text-fill-color: transparent; 
+                             text-shadow: 0px 2px 4px rgba(218,165,32,0.2);
+                             filter: drop-shadow(0px 0px 3px rgba(255,215,0,0.3));
+                             font-weight: 500;
+                             letter-spacing: 0.5px;">
+                        Your Daily Web AI Assistant
+                    </p>
+                </div>
+                """,
+                elem_classes=["slogan-text"],
             )
 
         with gr.Tabs() as tabs:

@@ -1,6 +1,7 @@
 from openai import OpenAI
 import pdb
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_core.globals import get_llm_cache
 from langchain_core.language_models.base import (
     BaseLanguageModel,
@@ -57,22 +58,22 @@ class DeepSeekR1ChatOpenAI(ChatOpenAI):
         **kwargs: Any,
     ) -> AIMessage:
         message_history = []
-        for input_ in input:
-            if isinstance(input_, SystemMessage):
-                message_history.append({"role": "system", "content": input_.content})
-            elif isinstance(input_, AIMessage):
-                message_history.append({"role": "assistant", "content": input_.content})
+        messages = convert_to_messages(input)
+        for message in messages:
+            if isinstance(message, SystemMessage):
+                message_history.append({"role": "system", "content": str(message.content)})
+            elif isinstance(message, AIMessage):
+                message_history.append({"role": "assistant", "content": str(message.content)})
             else:
-                message_history.append({"role": "user", "content": input_.content})
+                message_history.append({"role": "user", "content": str(message.content)})
         
-        response = self.client.chat.completions.create(
+        response = await self.client.chat.completions.create(
             model=self.model_name,
-            messages=messages
+            messages=message_history
         )
 
-        reasoning_content = response.choices[0].message.reasoning_content
         content = response.choices[0].message.content
-        return AIMessage(content=content, reasoning_content=reasoning_content)
+        return AIMessage(content=content)
     
     def invoke(
         self,
@@ -83,19 +84,75 @@ class DeepSeekR1ChatOpenAI(ChatOpenAI):
         **kwargs: Any,
     ) -> AIMessage:
         message_history = []
-        for input_ in input:
-            if isinstance(input_, SystemMessage):
-                message_history.append({"role": "system", "content": input_.content})
-            elif isinstance(input_, AIMessage):
-                message_history.append({"role": "assistant", "content": input_.content})
+        messages = convert_to_messages(input)
+        for message in messages:
+            if isinstance(message, SystemMessage):
+                message_history.append({"role": "system", "content": str(message.content)})
+            elif isinstance(message, AIMessage):
+                message_history.append({"role": "assistant", "content": str(message.content)})
             else:
-                message_history.append({"role": "user", "content": input_.content})
+                message_history.append({"role": "user", "content": str(message.content)})
         
         response = self.client.chat.completions.create(
             model=self.model_name,
             messages=message_history
         )
 
-        reasoning_content = response.choices[0].message.reasoning_content
         content = response.choices[0].message.content
-        return AIMessage(content=content, reasoning_content=reasoning_content)
+        return AIMessage(content=content)
+
+class DeepSeekR1ChatOllama(ChatOllama):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        
+    async def ainvoke(
+        self,
+        input: LanguageModelInput,
+        config: Optional[RunnableConfig] = None,
+        *,
+        stop: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> AIMessage:
+        message_history = []
+        messages = convert_to_messages(input)
+        for message in messages:
+            if isinstance(message, SystemMessage):
+                message_history.append({"role": "system", "content": str(message.content)})
+            elif isinstance(message, AIMessage):
+                message_history.append({"role": "assistant", "content": str(message.content)})
+            else:
+                message_history.append({"role": "user", "content": str(message.content)})
+        
+        response = await self.client.chat.completions.create(
+            model=self.model,
+            messages=message_history
+        )
+
+        content = response.choices[0].message.content
+        return AIMessage(content=content)
+    
+    def invoke(
+        self,
+        input: LanguageModelInput,
+        config: Optional[RunnableConfig] = None,
+        *,
+        stop: Optional[list[str]] = None,
+        **kwargs: Any,
+    ) -> AIMessage:
+        message_history = []
+        messages = convert_to_messages(input)
+        for message in messages:
+            if isinstance(message, SystemMessage):
+                message_history.append({"role": "system", "content": str(message.content)})
+            elif isinstance(message, AIMessage):
+                message_history.append({"role": "assistant", "content": str(message.content)})
+            else:
+                message_history.append({"role": "user", "content": str(message.content)})
+        
+        response = self.client.chat.completions.create(
+            model=self.model,
+            messages=message_history
+        )
+
+        content = response.choices[0].message.content
+        return AIMessage(content=content)
