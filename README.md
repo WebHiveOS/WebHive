@@ -180,4 +180,5 @@ playwright install
    ```
 
 ## Changelog
-- [x] **2025/01/26:** Thanks to @vvincent1234. Now Web Hive can combine with DeepSeek-r1 for enhanced AI capabilities!
+- [x] **2025/01/26:** Thanks to @tiagonascimento31
+. Now Web Hive can combine with DeepSeek-r1 for enhanced AI capabilities!
