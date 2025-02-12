@@ -84,3 +84,5 @@ COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 EXPOSE 7788 6080 5901
 
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+
+CMD ["python", "webhive.py", "--ip", "0.0.0.0", "--port", "7788"]

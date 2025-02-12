@@ -1,43 +1,50 @@
-<img src="./assets/web-ui.png" alt="Browser Use Web UI" width="full"/>
+<div align="center">
+  <img src="assets/github.png" alt="WebHive Logo" width="800">
+</div>
 
 <br/>
 
-[![GitHub stars](https://img.shields.io/github/stars/browser-use/web-ui?style=social)](https://github.com/browser-use/web-ui/stargazers)
-[![Discord](https://img.shields.io/discord/1303749220842340412?color=7289DA&label=Discord&logo=discord&logoColor=white)](https://link.browser-use.com/discord)
-[![Documentation](https://img.shields.io/badge/Documentation-📕-blue)](https://docs.browser-use.com)
-[![WarmShao](https://img.shields.io/twitter/follow/warmshao?style=social)](https://x.com/warmshao)
+<a href="https://twitter.com/YourNewTwitterHandle" target="_blank">
+  <img src="https://img.shields.io/twitter/follow/YourNewTwitterHandle?style=social" alt="Follow us on Twitter" />
+</a>
 
-This project builds upon the foundation of the [browser-use](https://github.com/browser-use/browser-use), which is designed to make websites accessible for AI agents.
+> **Enhanced Version:** WebHive improves the original browser-use/web-ui project with new features while keeping compatibility. We thank the original creators for their great work.
 
-We would like to officially thank [WarmShao](https://github.com/warmshao) for his contribution to this project.
+**WebHive** is a smart browser control center using AI. It works with:
+- All major AI models (Google, OpenAI, Anthropic, etc.)
+- Your existing browser profiles
+- Both simple and advanced tasks
 
-**WebUI:** is built on Gradio and supports most of `browser-use` functionalities. This UI is designed to be user-friendly and enables easy interaction with the browser agent.
+**AI Model Support:** Works with popular AI services:
+![AI Providers](https://via.placeholder.com/600x100?text=Google+OpenAI+Azure+Anthropic+DeepSeek+Ollama)
 
-**Expanded LLM Support:** We've integrated support for various Large Language Models (LLMs), including: Google, OpenAI, Azure OpenAI, Anthropic, DeepSeek, Ollama etc. And we plan to add support for even more models in the future.
+**Use Your Own Browser:** Keep your logins and settings. Works with Chrome/Firefox/Edge. Records HD videos of AI actions.
 
-**Custom Browser Support:** You can use your own browser with our tool, eliminating the need to re-login to sites or deal with other authentication challenges. This feature also supports high-definition screen recording.
+**Keep Browser Open:** Choose to maintain the browser window between tasks to see full history.
 
-**Persistent Browser Sessions:** You can choose to keep the browser window open between AI tasks, allowing you to see the complete history and state of AI interactions.
+**Coming Soon:**
+- 🛒 **Hive Marketplace**: Buy/sell browser automation scripts using $HIVE tokens
+- 🤖 **Advanced Automation**: Multi-step workflows (e.g. multi job applications, data collection, automated LinkedIN networking)
+- 🔗 **Agent Networks**: Connect with other AI agents for complex tasks
+- 🎁 **Early Access**: $HIVE holders get first access to new features
 
-<video src="https://github.com/user-attachments/assets/56bc7080-f2e3-4367-af22-6bf2245ff6cb" controls="controls">Your browser does not support playing this video!</video>
+> 💡 **$HIVE Token Utility**:
+> - Purchase premium automations
+> - Earn by selling your scripts
+> - Get voting rights for feature development
+> - Stake for passive income
 
 ## Installation Guide
 
-### Prerequisites
-- Python 3.11 or higher
-- Git (for cloning the repository)
+### Local Installation
 
-### Option 1: Local Installation
-
-Read the [quickstart guide](https://docs.browser-use.com/quickstart#prepare-the-environment) or follow the steps below to get started.
-
-#### Step 1: Clone the Repository
+#### 1. Get the Code
 ```bash
-git clone https://github.com/browser-use/web-ui.git
-cd web-ui
+git clone git@github.com:webhiveos/WebHive.git
+cd WebHive
 ```
 
-#### Step 2: Set Up Python Environment
+#### 2. Setup Python
 We recommend using [uv](https://docs.astral.sh/uv/) for managing the Python environment.
 
 Using uv (recommended):
@@ -59,7 +66,7 @@ Activate the virtual environment:
 source .venv/bin/activate
 ```
 
-#### Step 3: Install Dependencies
+#### 3. Install Requirements
 Install Python packages:
 ```bash
 uv pip install -r requirements.txt
@@ -70,7 +77,7 @@ Install Playwright:
 playwright install
 ```
 
-#### Step 4: Configure Environment
+#### 4. Configure Environment
 1. Create a copy of the example environment file:
 - Windows (Command Prompt):
 ```bash
@@ -82,7 +89,7 @@ cp .env.example .env
 ```
 2. Open `.env` in your preferred text editor and add your API keys and other settings
 
-### Option 2: Docker Installation
+### Docker Installation
 
 #### Prerequisites
 - Docker and Docker Compose installed
@@ -92,8 +99,8 @@ cp .env.example .env
 #### Installation Steps
 1. Clone the repository:
 ```bash
-git clone https://github.com/browser-use/web-ui.git
-cd web-ui
+git clone git@github.com:webhiveos/WebHive.git
+cd WebHive
 ```
 
 2. Create and configure environment file:
@@ -109,7 +116,7 @@ Edit `.env` with your preferred text editor and add your API keys
 
 feature/arm64-support
 4. **Access the Application:**
-   - WebUI: `http://localhost:7788`
+   - Web Hive Interface: `http://localhost:7788`
    - VNC Viewer (to see browser interactions): `http://localhost:6080/vnc.html`
    - Direct VNC access is available on port 5901 (especially useful for Mac users)
    
@@ -135,14 +142,15 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
 ## Usage
 
 ### Local Setup
-1.  **Run the WebUI:**
+1.  Copy `.env.example` to `.env` and set your environment variables, including API keys for the LLM. `cp .env.example .env`
+2.  **Run Web Hive:**
     After completing the installation steps above, start the application:
     ```bash
-    python webui.py --ip 127.0.0.1 --port 7788
+    python webhive.py --ip 127.0.0.1 --port 7788
     ```
-2. WebUI options:
-   - `--ip`: The IP address to bind the WebUI to. Default is `127.0.0.1`.
-   - `--port`: The port to bind the WebUI to. Default is `7788`.
+4. Web Hive options:
+   - `--ip`: The IP address to bind Web Hive to. Default is `127.0.0.1`.
+   - `--port`: The port to bind Web Hive to. Default is `7788`.
    - `--theme`: The theme for the user interface. Default is `Ocean`.
      - **Default**: The standard theme with a balanced design.
      - **Soft**: A gentle, muted color scheme for a relaxed viewing experience.
@@ -152,9 +160,9 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
      - **Citrus**: A vibrant, citrus-inspired palette with bright and fresh colors.
      - **Ocean** (default): A blue, ocean-inspired theme providing a calming effect.
    - `--dark-mode`: Enables dark mode for the user interface.
-3.  **Access the WebUI:** Open your web browser and navigate to `http://127.0.0.1:7788`.
+3.  **Access Web Hive Interface:** Open your web browser and navigate to `http://127.0.0.1:7788`.
 4.  **Using Your Own Browser(Optional):**
-    - Set `CHROME_PATH` to the executable path of your browser and `CHROME_USER_DATA` to the user data directory of your browser. Leave `CHROME_USER_DATA` empty if you want to use local user data.
+    - Set `CHROME_PATH` to the executable path of your browser and `CHROME_USER_DATA` to the user data directory of your browser.
       - Windows
         ```env
          CHROME_PATH="C:\Program Files\Google\Chrome\Application\chrome.exe"
@@ -164,10 +172,10 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
       - Mac
         ```env
          CHROME_PATH="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
-         CHROME_USER_DATA="/Users/YourUsername/Library/Application Support/Google/Chrome"
+         CHROME_USER_DATA="~/Library/Application Support/Google/Chrome/Profile 1"
         ```
     - Close all Chrome windows
-    - Open the WebUI in a non-Chrome browser, such as Firefox or Edge. This is important because the persistent browser context will use the Chrome data when running the agent.
+    - Open Web Hive in a non-Chrome browser, such as Firefox or Edge. This is important because the persistent browser context will use the Chrome data when running the agent.
     - Check the "Use Own Browser" option within the Browser Settings.
 5. **Keep Browser Open(Optional):**
     - Set `CHROME_PERSISTENT_SESSION=true` in the `.env` file.
@@ -230,6 +238,6 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
    ```
 
 ## Changelog
-- [x] **2025/01/26:** Thanks to @vvincent1234. Now browser-use-webui can combine with DeepSeek-r1 to engage in deep thinking!
-- [x] **2025/01/10:** Thanks to @casistack. Now we have Docker Setup option and also Support keep browser open between tasks.[Video tutorial demo](https://github.com/browser-use/web-ui/issues/1#issuecomment-2582511750).
-- [x] **2025/01/06:** Thanks to @richard-devbot. A New and Well-Designed WebUI is released. [Video tutorial demo](https://github.com/warmshao/browser-use-webui/issues/1#issuecomment-2573393113).
+- [x] **2025/01/26:** Thanks to @vvincent1234. Now Web Hive can combine with DeepSeek-r1 for enhanced AI capabilities!
+- [x] **2025/01/10:** Thanks to @casistack. Now Web Hive has Docker Setup option and persistent browser session support.
+- [x] **2025/01/06:** Thanks to @richard-devbot. A New and Well-Designed Web Hive is released.

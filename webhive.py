@@ -659,6 +659,19 @@ def create_ui(config, theme_name="Ocean"):
         text-align: center;
         margin-bottom: 30px;
     }
+    .header-image {
+        max-width: 600px;
+        margin: 0 auto;
+        display: block;
+    }
+    .slogan {
+        text-align: center;
+        font-size: 1.2em;
+        margin-top: 10px;
+        background: linear-gradient(45deg, #FFD700, #D4AF37);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
     .theme-section {
         margin-bottom: 20px;
         padding: 15px;
@@ -670,13 +683,20 @@ def create_ui(config, theme_name="Ocean"):
             title="Browser Use WebUI", theme=theme_map[theme_name], css=css
     ) as demo:
         with gr.Row():
-            gr.Markdown(
-                """
-                # 🌐 Browser Use WebUI
-                ### Control your browser with AI assistance
-                """,
-                elem_classes=["header-text"],
+            gr.Image(
+                value="assets/text_plus_logo_png.png",
+                elem_classes=["header-image"],
+                show_label=False,
+                interactive=False,
+                show_download_button=False,
+                show_share_button=False,
+                container=False
             )
+            
+        with gr.Row():
+            gr.HTML("""
+                <h3 class="slogan">Powering Browsing with AI Assistance</h3>
+            """)
 
         with gr.Tabs() as tabs:
             with gr.TabItem("⚙️ Agent Settings", id=1):
