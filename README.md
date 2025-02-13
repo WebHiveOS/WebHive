@@ -143,6 +143,9 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
 - VNC Viewer (for watching browser interactions): Open `http://localhost:6080/vnc.html`
   - Default VNC password: "youvncpassword"
   - Can be changed by setting `VNC_PASSWORD` in your `.env` file
+<br>
+
+<img src="https://github.com/user-attachments/assets/b24e3ae8-b7a7-4175-b601-5a0303cd3497" width="80%">
 
 ## Usage
 
