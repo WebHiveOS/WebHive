@@ -22,6 +22,8 @@
 
 **Keep Browser Open:** Choose to maintain the browser window between tasks to see full history.
 
+https://github.com/user-attachments/assets/9a9eebfb-02bd-4463-97b2-73c8dec94206
+
 **Coming Soon:**
 - 🛒 **Hive Marketplace**: Buy/sell browser automation scripts using $HIVE tokens
 - 🤖 **Advanced Automation**: Multi-step workflows (e.g. multi job applications, data collection, automated LinkedIN networking)
