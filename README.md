@@ -1,12 +1,13 @@
 <div align="center">
   <img src="assets/github.png" alt="WebHive Logo" width="800">
 </div>
-
+<br>
 <br/>
 
-<a href="https://twitter.com/YourNewTwitterHandle" target="_blank">
-  <img src="https://img.shields.io/twitter/follow/YourNewTwitterHandle?style=social" alt="Follow us on Twitter" />
-</a>
+
+[![Discord](https://img.shields.io/badge/Discord-WebHiveOS-blue)](https://discord.com/invite/7kqEFAZc)
+[![Documentation](https://img.shields.io/badge/Documentation-📕-blue)](https://webhiveos.xyz/docs)
+[![WebHiveOS](https://img.shields.io/twitter/follow/WebHiveOS?style=social)](https://x.com/WebHiveOS)
 
 > **Enhanced Version:** WebHive improves the original browser-use/web-ui project with new features while keeping compatibility. We thank the original creators for their great work.
 
@@ -15,8 +16,7 @@
 - Your existing browser profiles
 - Both simple and advanced tasks
 
-**AI Model Support:** Works with popular AI services:
-![AI Providers](https://via.placeholder.com/600x100?text=Google+OpenAI+Azure+Anthropic+DeepSeek+Ollama)
+**AI Model Support:** Works with popular AI services
 
 **Use Your Own Browser:** Keep your logins and settings. Works with Chrome/Firefox/Edge. Records HD videos of AI actions.
 
@@ -33,6 +33,11 @@
 > - Earn by selling your scripts
 > - Get voting rights for feature development
 > - Stake for passive income
+<br>
+
+<img src="https://github.com/user-attachments/assets/8abe3ed3-5b48-4b39-b208-8afcdf3aabaf" width="80%">
+
+<br>
 
 ## Installation Guide
 
@@ -149,17 +154,17 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
     python webhive.py --ip 127.0.0.1 --port 7788
     ```
 4. Web Hive options:
-   - `--ip`: The IP address to bind Web Hive to. Default is `127.0.0.1`.
-   - `--port`: The port to bind Web Hive to. Default is `7788`.
-   - `--theme`: The theme for the user interface. Default is `Ocean`.
-     - **Default**: The standard theme with a balanced design.
-     - **Soft**: A gentle, muted color scheme for a relaxed viewing experience.
-     - **Monochrome**: A grayscale theme with minimal color for simplicity and focus.
-     - **Glass**: A sleek, semi-transparent design for a modern appearance.
-     - **Origin**: A classic, retro-inspired theme for a nostalgic feel.
-     - **Citrus**: A vibrant, citrus-inspired palette with bright and fresh colors.
-     - **Ocean** (default): A blue, ocean-inspired theme providing a calming effect.
-   - `--dark-mode`: Enables dark mode for the user interface.
+- `--ip`: Specifies the IP address for binding Web Hive. The default value is `127.0.0.1`.  
+- `--port`: Defines the port Web Hive should use. Defaults to `7788`.  
+- `--theme`: Sets the user interface theme. The default is `Ocean`.  
+  - **Default**: A well-balanced theme with a standard design.  
+  - **Soft**: A muted, gentle color palette for a more relaxed viewing experience.  
+  - **Monochrome**: A grayscale theme that minimizes color for a clean and focused look.  
+  - **Glass**: A sleek, semi-transparent design for a modern aesthetic.  
+  - **Origin**: A retro-inspired theme that evokes nostalgia.  
+  - **Citrus**: A bright and refreshing palette with citrus-inspired tones.  
+  - **Ocean** *(default)*: A calming theme with ocean-inspired shades of blue.  
+- `--dark-mode`: Activates dark mode for the user interface.  
 3.  **Access Web Hive Interface:** Open your web browser and navigate to `http://127.0.0.1:7788`.
 4.  **Using Your Own Browser(Optional):**
     - Set `CHROME_PATH` to the executable path of your browser and `CHROME_USER_DATA` to the user data directory of your browser.
@@ -191,13 +196,13 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
      GOOGLE_API_KEY=your_key_here
 
      # Browser Settings
-     CHROME_PERSISTENT_SESSION=true   # Set to true to keep browser open between AI tasks
-     RESOLUTION=1920x1080x24         # Custom resolution format: WIDTHxHEIGHTxDEPTH
-     RESOLUTION_WIDTH=1920           # Custom width in pixels
-     RESOLUTION_HEIGHT=1080          # Custom height in pixels
+     CHROME_PERSISTENT_SESSION=true  #Keeps the browser open between AI tasks if set to true.
+     RESOLUTION=1920x1080x24         # Defines resolution in WIDTHxHEIGHTxDEPTH format.
+     RESOLUTION_WIDTH=1920           # Sets the screen width in pixels.
+     RESOLUTION_HEIGHT=1080          # Sets the screen height in pixels.
 
      # VNC Settings
-     VNC_PASSWORD=your_vnc_password  # Optional, defaults to "vncpassword"
+     VNC_PASSWORD=your_vnc_password  # (Optional) Specifies the VNC password. Defaults to "vncpassword" if not provided.
      ```
 
 2. **Platform Support:**
@@ -206,21 +211,21 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
 
 3. **Browser Persistence Modes:**
    - **Default Mode (CHROME_PERSISTENT_SESSION=false):**
-     - Browser opens and closes with each AI task
-     - Clean state for each interaction
-     - Lower resource usage
+     - The browser opens and closes with each AI task.
+     - Provides a clean state for every interaction.
+     - Consumes fewer system resources.
 
    - **Persistent Mode (CHROME_PERSISTENT_SESSION=true):**
-     - Browser stays open between AI tasks
-     - Maintains history and state
-     - Allows viewing previous AI interactions
-     - Set in `.env` file or via environment variable when starting container
+     - Keeps the browser open between AI tasks.
+     - Retains history and session state.
+     - Enables reviewing previous AI interactions.
+     - Can be configured in the .env file or set as an environment variable when launching the container.
 
 4. **Viewing Browser Interactions:**
-   - Access the noVNC viewer at `http://localhost:6080/vnc.html`
-   - Enter the VNC password (default: "vncpassword" or what you set in VNC_PASSWORD)
-   - Direct VNC access available on port 5900 (mapped to container port 5901)
-   - You can now see all browser interactions in real-time
+   - Open the noVNC viewer by navigating to: [`http://localhost:6080/vnc.html`](http://localhost:6080/vnc.html)  
+   - Enter the VNC password (default: `"vncpassword"` or the value set in `VNC_PASSWORD`).  
+   - Direct VNC access is available on port **5900**, mapped to container port **5901**.  
+   - This allows you to monitor all browser interactions in real time.
 
 5. **Container Management:**
    ```bash
@@ -238,6 +243,4 @@ CHROME_PERSISTENT_SESSION=true docker compose up --build
    ```
 
 ## Changelog
-- [x] **2025/01/26:** Thanks to @vvincent1234. Now Web Hive can combine with DeepSeek-r1 for enhanced AI capabilities!
-- [x] **2025/01/10:** Thanks to @casistack. Now Web Hive has Docker Setup option and persistent browser session support.
-- [x] **2025/01/06:** Thanks to @richard-devbot. A New and Well-Designed Web Hive is released.
+- [x] **2025/01/26:** Thanks to @tiagonascimento31. Now Web Hive can combine with DeepSeek-r1 for enhanced AI capabilities!
